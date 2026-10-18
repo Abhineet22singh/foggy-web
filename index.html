@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>MIST • Studio Glass</title>
+  <title>MIST • Photorealistic Studio Glass</title>
 
   <!-- Anti-cache meta -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <meta http-equiv="Expires" content="0"/>
 
-  <!-- Google Fonts: Inter Display & Text -->
+  <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -24,30 +24,22 @@
        DESIGN SYSTEM • Apple / Spotify Studio Dark Palette
        ══════════════════════════════════════════════════ */
     :root {
-      --bg-base: #08090c;
-      --bg-surface: rgba(18, 20, 26, 0.75);
-      --bg-surface-elevated: rgba(28, 31, 40, 0.85);
+      --bg-base: #07080b;
+      --bg-surface: rgba(16, 18, 24, 0.78);
       --border-subtle: rgba(255, 255, 255, 0.08);
       --border-highlight: rgba(255, 255, 255, 0.14);
-      --border-accent: rgba(142, 197, 252, 0.35);
-      
       --text-primary: #f8fafc;
       --text-secondary: #94a3b8;
       --text-muted: #64748b;
-      
       --accent-blue: #60a5fa;
       --accent-warm: #fbbf24;
       --accent-emerald: #34d399;
-      
-      --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 18px;
       --radius-xl: 24px;
-      
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
       --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.6);
-      --shadow-lg: 0 20px 60px -15px rgba(0, 0, 0, 0.85);
-      --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 20px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 24px 70px -15px rgba(0, 0, 0, 0.9);
     }
 
     *, *::before, *::after {
@@ -59,8 +51,8 @@
     body {
       background: var(--bg-base);
       background-image:
-        radial-gradient(ellipse 60% 40% at 50% -10%, rgba(56, 110, 180, 0.12), transparent 70%),
-        radial-gradient(circle at 85% 85%, rgba(120, 140, 180, 0.04), transparent 50%);
+        radial-gradient(ellipse 65% 45% at 50% -12%, rgba(56, 110, 190, 0.14), transparent 70%),
+        radial-gradient(circle at 85% 90%, rgba(90, 115, 150, 0.04), transparent 50%);
       min-height: 100vh;
       display: flex; flex-direction: column;
       align-items: center; justify-content: space-between;
@@ -86,9 +78,7 @@
       transition: all 0.3s ease;
     }
 
-    .brand {
-      display: flex; align-items: center; gap: 10px;
-    }
+    .brand { display: flex; align-items: center; gap: 10px; }
     .brand-mark {
       width: 28px; height: 28px;
       border-radius: 8px;
@@ -130,9 +120,7 @@
       box-shadow: 0 0 10px rgba(52, 211, 153, 0.7);
     }
 
-    .header-pills {
-      display: flex; align-items: center; gap: 6px;
-    }
+    .header-pills { display: flex; align-items: center; gap: 6px; }
     .mode-pill {
       display: inline-flex; align-items: center; gap: 6px;
       font-size: 0.67rem; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase;
@@ -171,12 +159,12 @@
       aspect-ratio: 4/3;
       border-radius: var(--radius-xl);
       overflow: hidden;
-      background: #030406;
+      background: #020305;
       border: 1px solid var(--border-highlight);
       box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(0, 0, 0, 0.85),
         var(--shadow-lg),
-        inset 0 1px 1px rgba(255, 255, 255, 0.14);
+        inset 0 1px 1px rgba(255, 255, 255, 0.15);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
@@ -217,7 +205,6 @@
       display: flex; align-items: center; gap: 6px;
     }
 
-    /* Gesture floating notification banner */
     #gestureBadge {
       align-self: center;
       display: inline-flex; align-items: center; gap: 8px;
@@ -234,19 +221,10 @@
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
     }
-    #gestureBadge.show {
-      opacity: 1; transform: translateY(0) scale(1);
-    }
-    #gestureBadge.badge-draw {
-      border-color: rgba(251, 191, 36, 0.4);
-      color: #fef08a;
-    }
-    #gestureBadge.badge-wipe {
-      border-color: rgba(96, 165, 250, 0.4);
-      color: #bae6fd;
-    }
+    #gestureBadge.show { opacity: 1; transform: translateY(0) scale(1); }
+    #gestureBadge.badge-draw { border-color: rgba(251, 191, 36, 0.4); color: #fef08a; }
+    #gestureBadge.badge-wipe { border-color: rgba(96, 165, 250, 0.4); color: #bae6fd; }
 
-    /* Bottom guidance overlay within glass */
     .hud-bottom {
       display: flex; justify-content: space-between; align-items: flex-end;
       width: 100%;
@@ -264,10 +242,10 @@
     }
     .hud-hint span { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-weight: 500; }
 
-    /* ── Polished Loader State ── */
+    /* Polished Loader */
     #loader {
       position: absolute; inset: 0;
-      background: rgba(9, 10, 14, 0.96);
+      background: rgba(8, 9, 13, 0.96);
       backdrop-filter: blur(20px);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
@@ -276,13 +254,8 @@
     }
     #loader.gone { opacity: 0; pointer-events: none; }
     
-    .loader-ring {
-      position: relative; width: 44px; height: 44px;
-    }
-    .loader-ring svg {
-      width: 100%; height: 100%;
-      animation: spin 1.4s linear infinite;
-    }
+    .loader-ring { position: relative; width: 44px; height: 44px; }
+    .loader-ring svg { width: 100%; height: 100%; animation: spin 1.4s linear infinite; }
     .loader-ring circle {
       fill: none; stroke-width: 3.5; stroke-linecap: round;
       stroke: rgba(142, 197, 252, 0.15);
@@ -293,9 +266,7 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .loader-text {
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
-    }
+    .loader-text { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     #loaderTitle { font-size: 0.85rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
     #loaderSub   { font-size: 0.70rem; color: var(--text-muted); }
 
@@ -323,10 +294,7 @@
       display: flex; align-items: center; gap: 20px;
       flex: 1; min-width: 280px;
     }
-    .slider-item {
-      display: flex; flex-direction: column; gap: 4px;
-      flex: 1;
-    }
+    .slider-item { display: flex; flex-direction: column; gap: 4px; flex: 1; }
     .slider-header {
       display: flex; justify-content: space-between; align-items: center;
       font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
@@ -359,9 +327,7 @@
       box-shadow: 0 0 12px var(--accent-blue);
     }
 
-    .dock-actions {
-      display: flex; align-items: center; gap: 8px;
-    }
+    .dock-actions { display: flex; align-items: center; gap: 8px; }
     .btn-action {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-subtle);
@@ -381,9 +347,7 @@
       color: #ffffff;
       transform: translateY(-1px);
     }
-    .btn-action:active {
-      transform: translateY(1px);
-    }
+    .btn-action:active { transform: translateY(1px); }
     
     .btn-action.btn-primary {
       background: linear-gradient(135deg, rgba(96, 165, 250, 0.25), rgba(96, 165, 250, 0.10));
@@ -396,10 +360,10 @@
       box-shadow: 0 0 16px rgba(96, 165, 250, 0.3);
     }
 
-    /* ── Toast Notification ── */
+    /* Toast Notification */
     #toast {
       position: fixed; top: 22px; right: 24px;
-      background: rgba(18, 22, 30, 0.92);
+      background: rgba(16, 20, 28, 0.94);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border-highlight);
@@ -413,29 +377,23 @@
       transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 100;
     }
-    #toast.show {
-      transform: translateY(0); opacity: 1; pointer-events: auto;
-    }
+    #toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
     #toast svg { width: 16px; height: 16px; fill: var(--accent-emerald); }
 
-    /* Flash shutter overlay */
+    /* Flash shutter */
     #shutterFlash {
       position: absolute; inset: 0; background: #ffffff;
       opacity: 0; pointer-events: none; z-index: 25;
       transition: opacity 0.35s ease-out;
     }
 
-    /* ── Responsive Mobile Media Queries ── */
     @media (max-width: 768px) {
       body { padding: 12px 14px; gap: 10px; }
       header { padding: 8px 14px; }
       .brand-name { font-size: 0.78rem; }
       .brand-badge { display: none; }
       .glass-chassis { width: 100%; border-radius: var(--radius-lg); }
-      .studio-dock {
-        flex-direction: column; align-items: stretch; gap: 12px;
-        padding: 14px;
-      }
+      .studio-dock { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px; }
       .dock-sliders { flex-direction: column; gap: 12px; min-width: 100%; }
       .dock-actions { justify-content: stretch; }
       .dock-actions .btn-action { flex: 1; justify-content: center; }
@@ -506,7 +464,7 @@
       <!-- Shutter Flash for Snapshots -->
       <div id="shutterFlash"></div>
 
-      <!-- Premium Loading Overlay -->
+      <!-- Loading Overlay -->
       <div id="loader">
         <div class="loader-ring">
           <svg viewBox="0 0 44 44">
@@ -611,12 +569,21 @@
   const handCtx = handCanvas.getContext('2d');
   const uiCtx   = uiCanvas.getContext('2d');
 
-  // Slider value readout sync
+  // Offscreen canvas for optical sharpness masking (Real Fog Optics)
+  const sharpCanvas = document.createElement('canvas');
+  sharpCanvas.width = W; sharpCanvas.height = H;
+  const sharpCtx = sharpCanvas.getContext('2d');
+
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = W; maskCanvas.height = H;
+  const maskCtx = maskCanvas.getContext('2d');
+
+  // Slider readout bindings
   drawSzIn.addEventListener('input', () => valDraw.textContent = `${drawSzIn.value} px`);
   fogDensIn.addEventListener('input', () => valDensity.textContent = `${Math.round(fogDensIn.value * 100)}%`);
   refogIn.addEventListener('input', () => valRefog.textContent = `${parseFloat(refogIn.value).toFixed(1)}x`);
 
-  // Toast feedback utility
+  // Toast utility
   let toastTimer = null;
   function showToast(message) {
     toastMsg.textContent = message;
@@ -626,40 +593,43 @@
   }
 
   // ════════════════════════════════════════════════════
-  //  FOG STATE — Solid, dense, frosted glass layer
+  //  PHOTOREALISTIC CONDENSATION STATE
   // ════════════════════════════════════════════════════
   const fogAlpha   = new Float32Array(W * H).fill(1.0);
   const smearAlpha = new Float32Array(W * H).fill(0.0);
 
-  // Perlin/Value noise grid for realistic micro-condensation
-  const NGRID = new Float32Array(256 * 256);
+  // Fractal micro-droplet noise lookup table
+  const NOISE_SIZE = 256;
+  const NGRID = new Float32Array(NOISE_SIZE * NOISE_SIZE);
   for(let i=0; i<NGRID.length; i++) NGRID[i] = Math.random();
+
   let noiseT = 0;
-  function sn(px, py){
-    const nx = ((px * 0.11 + noiseT * 0.12) | 0) & 255;
-    const ny = ((py * 0.11) | 0) & 255;
-    return NGRID[nx + ny * 256];
+  // Multi-frequency organic condensation noise
+  function sampleSteamNoise(px, py){
+    const i1 = (((px * 0.12 + noiseT * 0.10) | 0) & 255) + ((((py * 0.12) | 0) & 255) << 8);
+    const i2 = (((px * 0.28) | 0) & 255) + ((((py * 0.28 + noiseT * 0.05) | 0) & 255) << 8);
+    return NGRID[i1] * 0.70 + NGRID[i2] * 0.30;
   }
 
   // ════════════════════════════════════════════════════
-  //  CONDENSATION WATER RUNS & DROPS
+  //  PHYSICAL WATER BEADS & CONDENSATION RUNS
   // ════════════════════════════════════════════════════
   const drops = [];
   function spawnDrop(x, y, sz){
     drops.push({
       x: x ?? (16 + Math.random() * (W - 32)),
-      y: y ?? (Math.random() * H * 0.32),
-      r: sz ?? (2.4 + Math.random() * 4.0),
-      vy: 0.25 + Math.random() * 0.50,
+      y: y ?? (Math.random() * H * 0.35),
+      r: sz ?? (2.4 + Math.random() * 3.8),
+      vy: 0.22 + Math.random() * 0.45,
+      wobble: Math.random() * Math.PI * 2,
       trail: []
     });
   }
-  for(let i=0; i<24; i++) spawnDrop();
+  for(let i=0; i<26; i++) spawnDrop();
 
   // ════════════════════════════════════════════════════
-  //  FPS MONITOR & RENDER LOOP
+  //  OPTICAL RENDER LOOP (Physics-Based Fog Scattering)
   // ════════════════════════════════════════════════════
-  let lastFrameTime = performance.now();
   let frameCount = 0;
   let fpsTimer = performance.now();
 
@@ -676,13 +646,47 @@
       fpsTimer = now;
     }
 
-    // 1. Mirror flipped webcam feed
+    // ────────────────────────────────────────────────────────
+    // PASS 1: DIFFUSE SCATTERED REFLECTION (Optical Blur)
+    // In real life, steam scatters incoming light rays into a soft haze.
+    // Untouched foggy regions show a natural 16px Gaussian diffusion.
+    // ────────────────────────────────────────────────────────
     camCtx.save();
     camCtx.translate(W, 0); camCtx.scale(-1, 1);
+    camCtx.filter = 'blur(16px) brightness(1.08) saturate(0.82)';
     camCtx.drawImage(video, 0, 0, W, H);
     camCtx.restore();
 
-    // 2. Thick frosted condensation pass
+    // ────────────────────────────────────────────────────────
+    // PASS 2: CRYSTAL CLEAR SHARP REFLECTION IN WIPED AREAS
+    // Wherever fog is wiped/etched, the razor-sharp reflection shines through!
+    // ────────────────────────────────────────────────────────
+    sharpCtx.save();
+    sharpCtx.clearRect(0, 0, W, H);
+    sharpCtx.translate(W, 0); sharpCtx.scale(-1, 1);
+    sharpCtx.filter = 'none';
+    sharpCtx.drawImage(video, 0, 0, W, H);
+    sharpCtx.restore();
+
+    // Generate clear alpha mask from (1.0 - fogAlpha)
+    const maskImg = maskCtx.createImageData(W, H);
+    const md = maskImg.data;
+    for(let i=0; i<W*H; i++){
+      const clearVal = 1.0 - fogAlpha[i];
+      // Fast linear ramp with smooth anti-aliased edge
+      md[i*4 + 3] = Math.round(Math.min(1.0, clearVal * 1.6) * 255);
+    }
+    maskCtx.putImageData(maskImg, 0, 0);
+
+    // Mask sharp feed and composite over blurred background
+    sharpCtx.globalCompositeOperation = 'destination-in';
+    sharpCtx.drawImage(maskCanvas, 0, 0);
+    sharpCtx.globalCompositeOperation = 'source-over';
+    camCtx.drawImage(sharpCanvas, 0, 0);
+
+    // ────────────────────────────────────────────────────────
+    // PASS 3: CONDENSATION DROPLETS, MENISCUS RIM & FROST
+    // ────────────────────────────────────────────────────────
     const density = parseFloat(fogDensIn.value);
     const img = fogCtx.createImageData(W, H);
     const d = img.data;
@@ -691,97 +695,105 @@
       for(let px=0; px<W; px++){
         const i = py * W + px;
         const a = fogAlpha[i];
-        if(a < 0.004){ d[i*4 + 3] = 0; continue; }
+        if(a < 0.003){ d[i*4 + 3] = 0; continue; }
 
-        const n = sn(px, py);
-        // Cool metallic mist tones
-        const r  = (226 + n * 16) | 0;
-        const g  = (234 + n * 12) | 0;
-        const bv = (244 + n * 6)  | 0;
+        const n = sampleSteamNoise(px, py);
 
-        let fa = Math.min(1.0, a * density);
+        // Natural frosted steam tones with subtle light scattering
+        const r  = (226 + n * 18) | 0;
+        const g  = (234 + n * 14) | 0;
+        const bv = (244 + n * 8)  | 0;
 
-        // Wipe residue / glassy smear marks
+        // Density modulated by micro-droplet noise
+        let fa = Math.min(1.0, a * density * (0.94 + n * 0.08));
+
+        // Wet smear marks (residual oily skin film from wiping)
         const sm = smearAlpha[i];
         if(sm > 0.02 && fa > 0.02){
-          fa = Math.max(fa * 0.015, sm * 0.42);
+          fa = Math.max(fa * 0.015, sm * 0.40);
         }
 
-        d[i*4]   = r;
-        d[i*4+1] = g;
-        d[i*4+2] = bv;
-        d[i*4+3] = Math.round(fa * 255);
+        d[i*4]     = r;
+        d[i*4 + 1] = g;
+        d[i*4 + 2] = bv;
+        d[i*4 + 3] = Math.round(fa * 255);
       }
     }
     fogCtx.putImageData(img, 0, 0);
 
-    // 3. Studio Glass Sheen & Refraction
+    // ────────────────────────────────────────────────────────
+    // PASS 4: SPECULAR GLASS SHEEN & AMBIENT SURFACE MOISTURE
+    // ────────────────────────────────────────────────────────
     const sheen = fogCtx.createLinearGradient(0, 0, W * 0.65, H * 0.65);
-    sheen.addColorStop(0,   'rgba(255, 255, 255, 0.075)');
-    sheen.addColorStop(0.4, 'rgba(215, 235, 255, 0.025)');
-    sheen.addColorStop(1,   'rgba(255, 255, 255, 0.000)');
+    sheen.addColorStop(0,    'rgba(255, 255, 255, 0.08)');
+    sheen.addColorStop(0.35, 'rgba(215, 235, 255, 0.025)');
+    sheen.addColorStop(1,    'rgba(255, 255, 255, 0.00)');
     fogCtx.fillStyle = sheen;
     fogCtx.fillRect(0, 0, W, H);
 
-    // 4. Render Condensation Drops & Realistic Trickle Trails
+    // ────────────────────────────────────────────────────────
+    // PASS 5: PHYSICAL WATER DROPS & GRAVITY RUNS
+    // ────────────────────────────────────────────────────────
     renderDrops();
 
     requestAnimationFrame(renderLoop);
   }
 
+  // Realistic water drip physics
   function renderDrops(){
     if(Math.random() < 0.016) spawnDrop();
 
     for(let i = drops.length - 1; i >= 0; i--){
       const dr = drops[i];
-      dr.trail.push({x: dr.x, y: dr.y});
+      dr.trail.push({ x: dr.x, y: dr.y });
       if(dr.trail.length > 24) dr.trail.shift();
 
+      dr.wobble += 0.08;
       dr.y += dr.vy;
-      dr.vy += 0.011;
-      dr.x += (Math.random() - 0.5) * 0.35;
+      dr.vy += 0.012; // gravity acceleration
+      dr.x += Math.sin(dr.wobble) * 0.32; // natural meandering drip
 
-      // Realistic trickle: drop carves away a thin path through fogAlpha
+      // Realistic trickle: droplet carves a clear moisture trail through the fog
       const cx = dr.x | 0, cy = dr.y | 0;
       const fi = Math.min(W * H - 1, Math.max(0, cy * W + cx));
-      if(fogAlpha[fi] > 0.15){
-        const trR = (dr.r * 0.7) | 0;
+      if(fogAlpha[fi] > 0.12){
+        const trR = (dr.r * 0.72) | 0;
         for(let dy = -trR; dy <= trR; dy++){
           for(let dx = -trR; dx <= trR; dx++){
             const pxi = cx + dx, pyi = cy + dy;
             if(pxi >= 0 && pxi < W && pyi >= 0 && pyi < H){
               const pi = pyi * W + pxi;
-              fogAlpha[pi] = Math.max(0.04, fogAlpha[pi] - 0.08);
+              fogAlpha[pi] = Math.max(0.02, fogAlpha[pi] - 0.10);
             }
           }
         }
       }
 
-      if(dr.y > H + 12 || (fogAlpha[fi] < 0.06 && dr.y > 60)){
+      if(dr.y > H + 12 || (fogAlpha[fi] < 0.05 && dr.y > 60)){
         drops.splice(i, 1);
         continue;
       }
 
-      // Draw water track line
+      // Draw glossy water trail
       if(dr.trail.length > 2){
         fogCtx.beginPath();
-        fogCtx.strokeStyle = 'rgba(180, 225, 255, 0.35)';
-        fogCtx.lineWidth = dr.r * 0.75;
+        fogCtx.strokeStyle = 'rgba(185, 225, 255, 0.38)';
+        fogCtx.lineWidth = dr.r * 0.78;
         fogCtx.lineCap = 'round';
         fogCtx.moveTo(dr.trail[0].x, dr.trail[0].y);
         dr.trail.forEach(p => fogCtx.lineTo(p.x, p.y));
         fogCtx.stroke();
       }
 
-      // Draw shiny droplet bead
+      // Glistening water bead with realistic refraction highlight
       const g = fogCtx.createRadialGradient(
-        dr.x - dr.r * 0.3, dr.y - dr.r * 0.35, 0,
+        dr.x - dr.r * 0.32, dr.y - dr.r * 0.36, 0,
         dr.x, dr.y, dr.r
       );
       g.addColorStop(0,    'rgba(255, 255, 255, 0.98)');
-      g.addColorStop(0.38, 'rgba(220, 242, 255, 0.75)');
-      g.addColorStop(0.85, 'rgba(140, 195, 240, 0.25)');
-      g.addColorStop(1,    'rgba(100, 165, 210, 0.02)');
+      g.addColorStop(0.38, 'rgba(215, 240, 255, 0.78)');
+      g.addColorStop(0.85, 'rgba(135, 190, 235, 0.28)');
+      g.addColorStop(1,    'rgba(90, 155, 210, 0.02)');
       fogCtx.beginPath();
       fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI * 2);
       fogCtx.fillStyle = g;
@@ -847,7 +859,7 @@
         if(t > 1) continue;
         const str = (1 - t) ** 2;
         const i = py * W + px, prev = fogAlpha[i];
-        fogAlpha[i]   = Math.max(0, prev - str * 0.90);
+        fogAlpha[i]   = Math.max(0, prev - str * 0.92);
         smearAlpha[i] = Math.max(smearAlpha[i], str * prev * 0.45);
       }
     }
@@ -924,17 +936,14 @@
   function drawFingertipCursor(x, y){
     const r = parseInt(drawSzIn.value);
     uiCtx.save();
-    // Warm radial bloom
     const g = uiCtx.createRadialGradient(x, y, 0, x, y, r + 10);
     g.addColorStop(0, 'rgba(251, 191, 36, 0.45)');
     g.addColorStop(1, 'rgba(251, 191, 36, 0.00)');
     uiCtx.fillStyle = g; uiCtx.beginPath(); uiCtx.arc(x, y, r + 10, 0, Math.PI * 2); uiCtx.fill();
 
-    // Precision outer target ring
     uiCtx.strokeStyle = 'rgba(254, 240, 138, 0.95)'; uiCtx.lineWidth = 1.5;
     uiCtx.beginPath(); uiCtx.arc(x, y, r, 0, Math.PI * 2); uiCtx.stroke();
 
-    // Center focal point
     uiCtx.fillStyle = '#ffffff';
     uiCtx.beginPath(); uiCtx.arc(x, y, 2.5, 0, Math.PI * 2); uiCtx.fill();
     uiCtx.restore();
@@ -1008,7 +1017,6 @@
         }
       }
 
-      // Elegant dashed palm ellipse
       handCtx.save();
       handCtx.translate(pcx, pcy); handCtx.rotate(angle);
       handCtx.setLineDash([4, 6]);
@@ -1024,7 +1032,7 @@
   }
 
   // ════════════════════════════════════════════════════
-  //  ACTIONS: RESET & HIGH-RES SNAPSHOT
+  //  ACTIONS: RESET & SNAPSHOT
   // ════════════════════════════════════════════════════
   document.getElementById('clearBtn').addEventListener('click', () => {
     fogAlpha.fill(1.0);
@@ -1034,7 +1042,6 @@
   });
 
   document.getElementById('snapBtn').addEventListener('click', () => {
-    // Camera shutter flash effect
     shutterFlash.style.opacity = '0.9';
     setTimeout(() => shutterFlash.style.opacity = '0', 200);
 
@@ -1052,7 +1059,7 @@
     showToast('Snapshot saved to Downloads');
   });
 
-  // Touch screen fallback: allow direct drawing on touch devices
+  // Touch fallback for phones / tablets
   let isTouching = false;
   glassWrap.addEventListener('pointerdown', (e) => {
     isTouching = true;
