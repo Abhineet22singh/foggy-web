@@ -157,7 +157,7 @@
   <div class="gpills">
     <div class="gpill" id="pillDraw"><span class="icon">☝️</span>Draw</div>
     <div class="gpill" id="pillWipe"><span class="icon">🖐</span>Wipe</div>
-    <div class="gpill" id="pillBlow"><span class="icon">👄</span>Blow</div>
+    <div class="gpill" id="pillBlow"><span class="icon">👄</span>Re-fog All</div>
   </div>
 </div>
 
@@ -183,7 +183,7 @@
   <div id="guide">
     <div class="gi"><span>☝️</span><span>index finger → draw</span></div>
     <div class="gi"><span>🖐</span><span>open palm + move → wipe</span></div>
-    <div class="gi"><span>👄</span><span>open mouth → fog</span></div>
+    <div class="gi"><span>👄</span><span>open mouth → re-fog all</span></div>
   </div>
 
   <div id="loader">
@@ -459,7 +459,7 @@ function setGestureUI(g){
   pillBlow.classList.remove('blow-on');
   if(g==='DRAW'){ gLabel.textContent='☝️ Drawing'; gLabel.className='draw'; pillDraw.classList.add('draw-on'); }
   else if(g==='WIPE'){ gLabel.textContent='🖐 Wiping'; gLabel.className='wipe'; pillWipe.classList.add('wipe-on'); }
-  else if(g==='BLOW'){ gLabel.textContent='👄 Blowing fog'; gLabel.className='blow'; pillBlow.classList.add('blow-on'); }
+  else if(g==='BLOW'){ gLabel.textContent='👄 Re-fogging All'; gLabel.className='blow'; pillBlow.classList.add('blow-on'); }
 }
 
 function drawSkeleton(lm,gesture){
@@ -592,17 +592,25 @@ function onFaceResults(res){
   const thPct=Math.min(1,thresh/0.15)*100;
   mouthThreshLine.style.bottom=`${thPct}%`;
 
-  // Trigger fog bloom when mouth crosses threshold
+  // Trigger full re-fog when mouth crosses threshold
   if(mOpen>thresh){
     setGestureUI('BLOW');
     pillBlow.classList.add('blow-on');
+
+    // Steam & re-fog ALL pixels across the entire glass!
+    const boost = 0.05 + Math.min(0.12, (mOpen - thresh) * 1.8);
+    for(let i=0; i<fogAlpha.length; i++){
+      if(fogAlpha[i] < 1.0) fogAlpha[i] = Math.min(1.0, fogAlpha[i] + boost);
+      if(smearAlpha[i] > 0) smearAlpha[i] = Math.max(0, smearAlpha[i] - boost * 0.5);
+    }
+
     blowCooldown--;
     if(blowCooldown<=0){
       // Mirror position of mouth on the foggy glass
       const mx=(1-lm[14].x)*W;
       const my=lm[14].y*H;
       addFogBloom(mx,my,mOpen-thresh);
-      blowCooldown=10;
+      blowCooldown=8;
     }
     // Draw subtle mouth outline on face canvas
     drawMouthOutline(lm);
@@ -675,7 +683,7 @@ function startAll(){
 
   cam.start().then(()=>{
     setTimeout(()=>loader.classList.add('gone'),2000);
-    statusEl.textContent='✅ Ready! ☝️ Index=Draw  🖐 Palm=Wipe  👄 Mouth=Fog';
+    statusEl.textContent='✅ Ready! ☝️ Index=Draw  🖐 Palm=Wipe  👄 Open Mouth=Re-fog All';
     requestAnimationFrame(renderLoop);
   }).catch(err=>{ loaderMsg.textContent='❌ '+err.message; });
 }
