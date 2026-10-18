@@ -4,156 +4,190 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Foggy Mirror</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
-
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
     body {
-      background: #0c0d10;
+      background: #0b0c0f;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       font-family: 'Inter', sans-serif;
-      color: #e0e8f0;
-      overflow: hidden;
-      gap: 12px;
+      color: #dde8f2; overflow: hidden; gap: 14px;
     }
 
+    /* ── Top bar ── */
     .topbar {
-      display: flex; align-items: center; gap: 10px; opacity: 0.8;
+      display: flex; align-items: center; gap: 16px;
     }
     .topbar h1 {
-      font-size: 1rem; font-weight: 400;
-      letter-spacing: 3px; text-transform: uppercase; color: #9ec8f5;
+      font-size: 0.9rem; font-weight: 400;
+      letter-spacing: 4px; text-transform: uppercase; color: #7eb8f7;
     }
-    .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #f87171; box-shadow: 0 0 8px #f87171;
-      transition: background 0.4s, box-shadow 0.4s;
+
+    /* Mode pills */
+    .modes {
+      display: flex; gap: 7px;
     }
-    .dot.active { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+    .pill {
+      font-size: 0.65rem; letter-spacing: 1px;
+      padding: 3px 10px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.3);
+      background: transparent;
+      transition: all 0.3s;
+    }
+    .pill.on {
+      color: #fff;
+      border-color: rgba(126,184,247,0.6);
+      background: rgba(126,184,247,0.15);
+      box-shadow: 0 0 10px rgba(126,184,247,0.25);
+    }
+    .pill.blow.on {
+      border-color: rgba(248,180,120,0.6);
+      background: rgba(248,180,120,0.12);
+      box-shadow: 0 0 10px rgba(248,180,120,0.2);
+      color: #f8c09a;
+    }
+    .pill.hand.on {
+      border-color: rgba(100,220,140,0.6);
+      background: rgba(100,220,140,0.12);
+      box-shadow: 0 0 10px rgba(100,220,140,0.2);
+      color: #90eeaa;
+    }
 
     /* ── Canvas stack ── */
     #wrap {
-      position: relative;
-      border-radius: 14px; overflow: hidden;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.09), 0 8px 60px rgba(0,0,0,0.7);
+      position: relative; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 70px rgba(0,0,0,0.8);
+      cursor: none;
     }
-    #wrap canvas {
-      display: block; width: 640px; height: 480px;
-    }
-    #camCanvas  { position: relative; }
-    #fogCanvas,
-    #handCanvas { position: absolute; top:0; left:0; }
+    #wrap canvas { display: block; width: 640px; height: 480px; }
+    #camCanvas { position: relative; }
+    #fogCanvas, #handCanvas, #uiCanvas { position: absolute; top:0; left:0; }
+    #fogCanvas  { pointer-events: all; }
+    #handCanvas { pointer-events: none; }
+    #uiCanvas   { pointer-events: none; }
 
-    /* ── Hand badge overlay ── */
-    #hand-badge {
-      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.6);
-      border: 1px solid rgba(78,222,128,0.5);
-      color: #4ade80; font-size: 0.65rem;
-      padding: 4px 14px; border-radius: 20px; letter-spacing: 1.5px;
-      opacity: 0; transition: opacity 0.4s; pointer-events: none; z-index: 20;
+    /* ── Breath bloom overlay (CSS animated) ── */
+    .breath-ring {
+      position: absolute; border-radius: 50%; pointer-events: none;
+      border: 1.5px solid rgba(255,255,255,0.35);
+      animation: breathRing 1.2s ease-out forwards;
+      transform: translate(-50%,-50%);
     }
-    #hand-badge.on { opacity: 1; }
-
-    /* ── Instructions overlay ── */
-    #instructions {
-      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08);
-      color: rgba(255,255,255,0.55); font-size: 0.68rem;
-      padding: 5px 16px; border-radius: 20px; white-space: nowrap;
-      letter-spacing: 0.8px; pointer-events: none; z-index: 20;
+    @keyframes breathRing {
+      0%   { width: 20px; height: 20px; opacity: 0.8; }
+      100% { width: 220px; height: 160px; opacity: 0; }
     }
 
-    /* ── Loading overlay ── */
-    #loader {
-      position: absolute; inset: 0;
-      background: rgba(12,13,16,0.88);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 14px; z-index: 30; border-radius: 14px;
-      transition: opacity 0.5s;
-    }
-    #loader.gone { opacity: 0; pointer-events: none; }
-    .spinner {
-      width: 38px; height: 38px;
-      border: 3px solid rgba(126,184,247,0.15);
-      border-top-color: #7eb8f7;
-      border-radius: 50%; animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #loader p { font-size: 0.8rem; color: #7eb8f7; letter-spacing: 1px; }
-
-    /* ── Controls ── */
+    /* ── Bottom controls ── */
     #controls {
       display: flex; gap: 10px;
       align-items: center; flex-wrap: wrap; justify-content: center;
     }
     .cg {
-      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 10px; padding: 7px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; padding: 6px 13px;
       display: flex; align-items: center; gap: 9px;
-      font-size: 0.73rem; color: #8faabb;
+      font-size: 0.72rem; color: #7a96aa;
     }
     input[type="range"] {
-      -webkit-appearance: none; width: 80px; height: 3px;
-      background: rgba(126,184,247,0.2); border-radius: 2px; outline: none; cursor: pointer;
+      -webkit-appearance: none; width: 75px; height: 3px;
+      background: rgba(126,184,247,0.2); border-radius: 2px; cursor: pointer;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none; width: 12px; height: 12px;
       border-radius: 50%; background: #7eb8f7;
-      box-shadow: 0 0 5px #7eb8f7; cursor: pointer;
+      box-shadow: 0 0 6px #7eb8f7; cursor: pointer;
     }
     .btn {
-      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
-      color: #9ec8f5; padding: 7px 15px; border-radius: 8px;
-      font-size: 0.73rem; font-family: inherit; cursor: pointer;
-      letter-spacing: 0.5px; transition: background 0.2s, box-shadow 0.2s;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: #8ab4d4; padding: 6px 14px; border-radius: 8px;
+      font-size: 0.72rem; font-family: inherit; cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
     }
-    .btn:hover { background: rgba(126,184,247,0.14); box-shadow: 0 0 12px rgba(126,184,247,0.2); }
+    .btn:hover { background: rgba(126,184,247,0.13); box-shadow: 0 0 10px rgba(126,184,247,0.2); }
 
-    #statusEl {
-      font-size: 0.7rem; color: #4a6275; letter-spacing: 1px; min-height: 16px;
+    #statusEl { font-size: 0.68rem; color: #3d5566; letter-spacing: 0.8px; min-height: 14px; }
+
+    /* ── Loader ── */
+    #loader {
+      position: absolute; inset: 0; background: rgba(11,12,15,0.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px; z-index: 40; border-radius: 14px;
+      transition: opacity 0.6s;
     }
+    #loader.gone { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(126,184,247,0.12);
+      border-top-color: #7eb8f7; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loaderMsg { font-size: 0.78rem; color: #7eb8f7; letter-spacing: 1.2px; }
+
+    /* ── Hint bar (bottom of canvas) ── */
+    #hint {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.55));
+      padding: 18px 16px 10px;
+      display: flex; justify-content: center; gap: 18px;
+      pointer-events: none; z-index: 5;
+    }
+    .hint-item { font-size: 0.62rem; color: rgba(255,255,255,0.4); letter-spacing: 0.8px; }
   </style>
 </head>
 <body>
 
+<!-- Top bar -->
 <div class="topbar">
-  <div class="dot" id="dot"></div>
-  <h1>Foggy Mirror</h1>
+  <h1>🪟 Foggy Mirror</h1>
+  <div class="modes">
+    <span class="pill draw" id="pillDraw">✍️ DRAW</span>
+    <span class="pill blow" id="pillBlow">💨 BLOW</span>
+    <span class="pill hand" id="pillHand">🖐 HAND</span>
+  </div>
 </div>
 
+<!-- Canvas stack -->
 <div id="wrap">
   <canvas id="camCanvas" width="640" height="480"></canvas>
   <canvas id="fogCanvas" width="640" height="480"></canvas>
   <canvas id="handCanvas" width="640" height="480"></canvas>
+  <canvas id="uiCanvas"   width="640" height="480"></canvas>
 
-  <div id="hand-badge">✋ HAND DETECTED</div>
-  <div id="instructions">🖐 Move your hand in front of the camera to wipe the fog</div>
-
-  <!-- Loading overlay -->
+  <div id="hint">
+    <span class="hint-item">✍️ Drag to write on fog</span>
+    <span class="hint-item">💨 Blow into mic → fog appears</span>
+    <span class="hint-item">🖐 Wave hand → wipe fog</span>
+  </div>
   <div id="loader">
     <div class="spinner"></div>
     <p id="loaderMsg">Starting camera…</p>
   </div>
 </div>
 
+<!-- Controls -->
 <div id="controls">
   <div class="cg">
-    <span>Wipe Size</span>
-    <input type="range" id="wipeSize" min="0.4" max="2.0" step="0.05" value="1.0"/>
+    <span>Draw size</span>
+    <input type="range" id="drawSize" min="4" max="28" value="10"/>
   </div>
   <div class="cg">
     <span>Re-fog</span>
-    <input type="range" id="refogSpeed" min="0" max="6" step="0.1" value="1.2"/>
+    <input type="range" id="refogSpeed" min="0" max="6" step="0.1" value="1.0"/>
+  </div>
+  <div class="cg">
+    <span>Blow sensitivity</span>
+    <input type="range" id="blowSens" min="5" max="60" value="22"/>
   </div>
   <button class="btn" id="clearBtn">🌫 Re-fog All</button>
   <button class="btn" id="snapBtn">📸 Snapshot</button>
@@ -164,68 +198,75 @@
 <video id="video" autoplay playsinline style="display:none"></video>
 
 <script>
-// ══════════════════════════════════════════
-//  SETUP
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  CONSTANTS & DOM
+// ══════════════════════════════════════════════════════
 const W = 640, H = 480;
-
 const video      = document.getElementById('video');
 const camCanvas  = document.getElementById('camCanvas');
 const fogCanvas  = document.getElementById('fogCanvas');
 const handCanvas = document.getElementById('handCanvas');
+const uiCanvas   = document.getElementById('uiCanvas');
+const wrap       = document.getElementById('wrap');
 const camCtx     = camCanvas.getContext('2d');
-const fogCtx     = fogCanvas.getContext('2d', { willReadFrequently: true });
+const fogCtx     = fogCanvas.getContext('2d');
 const handCtx    = handCanvas.getContext('2d');
-const dot        = document.getElementById('dot');
-const badge      = document.getElementById('hand-badge');
+const uiCtx      = uiCanvas.getContext('2d');
 const loader     = document.getElementById('loader');
 const loaderMsg  = document.getElementById('loaderMsg');
 const statusEl   = document.getElementById('statusEl');
-const wipeSzInput = document.getElementById('wipeSize');
-const refogInput  = document.getElementById('refogSpeed');
-const clearBtn    = document.getElementById('clearBtn');
-const snapBtn     = document.getElementById('snapBtn');
+const pillDraw   = document.getElementById('pillDraw');
+const pillBlow   = document.getElementById('pillBlow');
+const pillHand   = document.getElementById('pillHand');
+const drawSzIn   = document.getElementById('drawSize');
+const refogIn    = document.getElementById('refogSpeed');
+const blowSensIn = document.getElementById('blowSens');
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 //  FOG STATE
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 const fogAlpha   = new Float32Array(W * H).fill(1.0);
 const smearAlpha = new Float32Array(W * H).fill(0.0);
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  NOISE TEXTURE
+// ══════════════════════════════════════════════════════
+const NGRID = new Float32Array(256 * 256);
+for (let i = 0; i < NGRID.length; i++) NGRID[i] = Math.random();
+let noiseT = 0;
+function sampleNoise(px, py) {
+  const nx = ((px * 0.09 + noiseT * 0.18) | 0) & 255;
+  const ny = ((py * 0.09)                 | 0) & 255;
+  return NGRID[nx + ny * 256];
+}
+
+// ══════════════════════════════════════════════════════
 //  WATER DROPS
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
 const drops = [];
-function spawnDrop() {
+function spawnDrop(x, y, size) {
   drops.push({
-    x: 20 + Math.random() * (W - 40),
-    y: Math.random() * H * 0.25,
-    r: 2 + Math.random() * 4.5,
-    vy: 0.25 + Math.random() * 0.55,
+    x: x ?? (20 + Math.random() * (W - 40)),
+    y: y ?? (Math.random() * H * 0.3),
+    r: size ?? (2 + Math.random() * 4),
+    vy: 0.2 + Math.random() * 0.5,
     trail: []
   });
 }
 for (let i = 0; i < 20; i++) spawnDrop();
 
-// ══════════════════════════════════════════
-//  VALUE NOISE (fast)
-// ══════════════════════════════════════════
-const NGRID = new Float32Array(128 * 128);
-for (let i = 0; i < NGRID.length; i++) NGRID[i] = Math.random();
-let noiseT = 0;
-function sampleNoise(px, py) {
-  const nx = ((px / W * 56 + noiseT * 0.2) | 0) & 127;
-  const ny = ((py / H * 56)                | 0) & 127;
-  return NGRID[nx + ny * 128];
-}
+// ══════════════════════════════════════════════════════
+//  CURSOR POSITION
+// ══════════════════════════════════════════════════════
+let cursorX = -100, cursorY = -100, isDrawing = false;
 
-// ══════════════════════════════════════════
-//  RENDER LOOP
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  MAIN RENDER LOOP
+// ══════════════════════════════════════════════════════
 function renderLoop() {
-  noiseT += 0.006;
+  noiseT += 0.005;
 
-  // 1. Webcam — mirrored
+  // 1. Webcam — mirrored like a real mirror
   camCtx.save();
   camCtx.translate(W, 0); camCtx.scale(-1, 1);
   camCtx.drawImage(video, 0, 0, W, H);
@@ -234,142 +275,234 @@ function renderLoop() {
   // 2. Build fog pixel-by-pixel
   const img = fogCtx.createImageData(W, H);
   const d   = img.data;
-
   for (let py = 0; py < H; py++) {
     for (let px = 0; px < W; px++) {
       const i  = py * W + px;
       let   a  = fogAlpha[i];
-      if (a <= 0.003) { d[i*4+3] = 0; continue; }
+      if (a < 0.004) { d[i*4+3] = 0; continue; }
 
-      const n   = sampleNoise(px, py);
-      const r   = (218 + n * 16) | 0;
-      const g   = (227 + n * 10) | 0;
-      const b   = (238 + n *  5) | 0;
+      const n  = sampleNoise(px, py);
+      // Warm breath tint — slightly yellowish-white like real condensation
+      const r  = (220 + n * 18) | 0;
+      const g  = (228 + n * 12) | 0;
+      const bv = (235 + n *  6) | 0;
 
-      // Edge vignette — thicker fog at border
+      // Vignette — thicker at edges
       const vx   = (px / W - 0.5) * 2;
       const vy   = (py / H - 0.5) * 2;
-      const vign = Math.min(1, 0.68 + 0.32 * (vx*vx + vy*vy) * 1.6);
+      const vign = Math.min(1.0, 0.66 + 0.34 * (vx*vx + vy*vy) * 1.7);
       let   fa   = Math.min(1, a * vign);
 
       // Smear residue
       const sm = smearAlpha[i];
-      if (sm > 0.02 && fa > 0.02) fa = Math.max(fa * 0.02, sm * 0.48);
+      if (sm > 0.03 && fa > 0.03) fa = Math.max(fa * 0.015, sm * 0.44);
 
       d[i*4]   = r;
       d[i*4+1] = g;
-      d[i*4+2] = b;
+      d[i*4+2] = bv;
       d[i*4+3] = Math.round(fa * 255);
     }
   }
   fogCtx.putImageData(img, 0, 0);
 
   // 3. Glass sheen
-  const sheen = fogCtx.createLinearGradient(0, 0, W * 0.55, H * 0.55);
-  sheen.addColorStop(0, 'rgba(255,255,255,0.05)');
+  const sheen = fogCtx.createLinearGradient(0, 0, W*0.5, H*0.5);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.06)');
   sheen.addColorStop(1, 'rgba(255,255,255,0.00)');
   fogCtx.fillStyle = sheen;
   fogCtx.fillRect(0, 0, W, H);
 
-  // 4. Water drops
+  // 4. Water drops on top of fog
   renderDrops();
+
+  // 5. Custom finger cursor (UI canvas)
+  uiCtx.clearRect(0, 0, W, H);
+  if (cursorX > 0) drawCursor();
 
   requestAnimationFrame(renderLoop);
 }
 
-// ══════════════════════════════════════════
-//  WATER DROPS RENDER
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  CUSTOM CURSOR — fingertip style
+// ══════════════════════════════════════════════════════
+function drawCursor() {
+  const r = parseInt(drawSzIn.value);
+  uiCtx.save();
+  // Outer ring
+  uiCtx.beginPath();
+  uiCtx.arc(cursorX, cursorY, r + 3, 0, Math.PI * 2);
+  uiCtx.strokeStyle = isDrawing
+    ? 'rgba(255,200,150,0.9)'
+    : 'rgba(200,225,255,0.55)';
+  uiCtx.lineWidth = 1.5;
+  uiCtx.stroke();
+  // Inner dot
+  uiCtx.beginPath();
+  uiCtx.arc(cursorX, cursorY, 2.5, 0, Math.PI * 2);
+  uiCtx.fillStyle = isDrawing ? '#f8c09a' : 'rgba(255,255,255,0.7)';
+  uiCtx.fill();
+  uiCtx.restore();
+}
+
+// ══════════════════════════════════════════════════════
+//  WATER DROP RENDER
+// ══════════════════════════════════════════════════════
 function renderDrops() {
-  if (Math.random() < 0.015) spawnDrop();
+  if (Math.random() < 0.013) spawnDrop();
 
   for (let i = drops.length - 1; i >= 0; i--) {
     const dr = drops[i];
     dr.trail.push({ x: dr.x, y: dr.y });
-    if (dr.trail.length > 20) dr.trail.shift();
+    if (dr.trail.length > 22) dr.trail.shift();
     dr.y  += dr.vy;
-    dr.vy += 0.01;
-    dr.x  += (Math.random() - 0.5) * 0.35;
+    dr.vy += 0.009;
+    dr.x  += (Math.random() - 0.5) * 0.3;
 
-    const fi = Math.min(W*H-1, (dr.y|0) * W + (dr.x|0));
-    if (fogAlpha[fi] < 0.08) { drops.splice(i, 1); continue; }
-    if (dr.y > H + 10)       { drops.splice(i, 1); continue; }
+    const fi = Math.min(W*H-1, (dr.y|0)*W + (dr.x|0));
+    if (dr.y > H + 10 || (fogAlpha[fi] < 0.07 && dr.y > 50)) {
+      drops.splice(i, 1); continue;
+    }
 
-    // Trail
+    // Trail streak
     if (dr.trail.length > 2) {
       fogCtx.beginPath();
-      fogCtx.strokeStyle = 'rgba(175,210,238,0.32)';
-      fogCtx.lineWidth   = dr.r * 0.65;
+      fogCtx.strokeStyle = 'rgba(168,208,238,0.28)';
+      fogCtx.lineWidth   = dr.r * 0.6;
       fogCtx.lineCap     = 'round';
       fogCtx.moveTo(dr.trail[0].x, dr.trail[0].y);
       dr.trail.forEach(p => fogCtx.lineTo(p.x, p.y));
       fogCtx.stroke();
     }
     // Bead
-    const grd = fogCtx.createRadialGradient(
-      dr.x - dr.r * 0.3, dr.y - dr.r * 0.35, 0,
+    const g = fogCtx.createRadialGradient(
+      dr.x - dr.r*0.3, dr.y - dr.r*0.35, 0,
       dr.x, dr.y, dr.r
     );
-    grd.addColorStop(0,   'rgba(255,255,255,0.92)');
-    grd.addColorStop(0.4, 'rgba(200,225,245,0.6)');
-    grd.addColorStop(1,   'rgba(140,185,220,0.15)');
+    g.addColorStop(0,   'rgba(255,255,255,0.95)');
+    g.addColorStop(0.45,'rgba(200,225,245,0.6)');
+    g.addColorStop(1,   'rgba(140,185,220,0.12)');
     fogCtx.beginPath();
-    fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI * 2);
-    fogCtx.fillStyle = grd;
+    fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI*2);
+    fogCtx.fillStyle = g;
     fogCtx.fill();
   }
 }
 
-// ══════════════════════════════════════════
-//  WIPE FOG — palm-shaped ellipse
-// ══════════════════════════════════════════
-function wipeFogEllipse(cx, cy, rx, ry, angle) {
-  const cosA = Math.cos(-angle), sinA = Math.sin(-angle);
-  const mx = Math.round(cx), my = Math.round(cy);
-  const pad = Math.max(rx, ry) + 2;
-  const x0  = Math.max(0, mx - pad | 0);
-  const x1  = Math.min(W - 1, mx + pad | 0);
-  const y0  = Math.max(0, my - pad | 0);
-  const y1  = Math.min(H - 1, my + pad | 0);
+// ══════════════════════════════════════════════════════
+//  WIPE FOG — DRAW MODE (thin finger stroke)
+//  Clears a small circle so writing is visible through
+// ══════════════════════════════════════════════════════
+function drawOnFog(cx, cy) {
+  const r  = parseInt(drawSzIn.value);
+  const r2 = r * r;
+  const x0 = Math.max(0, cx - r | 0);
+  const x1 = Math.min(W-1, cx + r | 0);
+  const y0 = Math.max(0, cy - r | 0);
+  const y1 = Math.min(H-1, cy + r | 0);
 
   for (let py = y0; py <= y1; py++) {
     for (let px = x0; px <= x1; px++) {
-      const dx = px - cx, dy = py - cy;
-      // Rotate into ellipse space
-      const lx = dx * cosA - dy * sinA;
-      const ly = dx * sinA + dy * cosA;
-      const t  = (lx/rx)*(lx/rx) + (ly/ry)*(ly/ry);
-      if (t > 1) continue;
-      const strength = (1 - t) * (1 - t);   // smooth falloff
-      const i = py * W + px;
+      const dx = px-cx, dy = py-cy;
+      const d2 = dx*dx + dy*dy;
+      if (d2 > r2) continue;
+      const t  = 1 - d2/r2;
+      const sm = t*t*t;
+      const i  = py*W+px;
       const prev = fogAlpha[i];
-      fogAlpha[i]   = Math.max(0, prev - strength * 0.88);
-      smearAlpha[i] = Math.max(smearAlpha[i], strength * prev * 0.42);
+      fogAlpha[i]   = Math.max(0, prev - sm * 0.97);
+      smearAlpha[i] = Math.max(smearAlpha[i], sm * prev * 0.35);
     }
   }
   scheduleRefog();
 }
 
-// Also used for mouse fallback (circular)
-function wipeFogCircle(cx, cy, r) {
-  wipeFogEllipse(cx, cy, r, r, 0);
+// ══════════════════════════════════════════════════════
+//  WIPE FOG — HAND MODE (palm ellipse)
+// ══════════════════════════════════════════════════════
+function wipePalm(cx, cy, rx, ry, angle) {
+  const cosA = Math.cos(-angle), sinA = Math.sin(-angle);
+  const pad  = Math.max(rx, ry) + 4;
+  const x0   = Math.max(0, (cx-pad)|0);
+  const x1   = Math.min(W-1, (cx+pad)|0);
+  const y0   = Math.max(0, (cy-pad)|0);
+  const y1   = Math.min(H-1, (cy+pad)|0);
+
+  for (let py = y0; py <= y1; py++) {
+    for (let px = x0; px <= x1; px++) {
+      const dx = px-cx, dy = py-cy;
+      const lx = dx*cosA - dy*sinA;
+      const ly = dx*sinA + dy*cosA;
+      const t  = (lx/rx)*(lx/rx) + (ly/ry)*(ly/ry);
+      if (t > 1) continue;
+      const str = (1-t)*(1-t);
+      const i   = py*W+px;
+      const prev = fogAlpha[i];
+      fogAlpha[i]   = Math.max(0, prev - str * 0.85);
+      smearAlpha[i] = Math.max(smearAlpha[i], str * prev * 0.4);
+    }
+  }
+  scheduleRefog();
 }
 
-// ══════════════════════════════════════════
-//  RE-FOG
-// ══════════════════════════════════════════
+// ══════════════════════════════════════════════════════
+//  FOG BLOOM — BREATH MODE
+//  Adds fog in an oval patch + spawns droplets
+// ══════════════════════════════════════════════════════
+function addFogBloom(cx, cy, strength) {
+  // Breath hits roughly bottom-center of mirror
+  const rx = 110 + strength * 3;
+  const ry = 75  + strength * 2;
+  const x0 = Math.max(0, (cx-rx)|0);
+  const x1 = Math.min(W-1, (cx+rx)|0);
+  const y0 = Math.max(0, (cy-ry)|0);
+  const y1 = Math.min(H-1, (cy+ry)|0);
+
+  for (let py = y0; py <= y1; py++) {
+    for (let px = x0; px <= x1; px++) {
+      const dx = (px-cx)/rx, dy = (py-cy)/ry;
+      const t  = dx*dx + dy*dy;
+      if (t > 1) continue;
+      const amt = (1-t)*(1-t) * Math.min(1, strength/20) * 0.75;
+      const i   = py*W+px;
+      fogAlpha[i] = Math.min(1.0, fogAlpha[i] + amt);
+    }
+  }
+
+  // Spawn condensation drops in the bloom area
+  const numDrops = 2 + (strength/10 | 0);
+  for (let d = 0; d < numDrops; d++) {
+    spawnDrop(
+      cx + (Math.random()-0.5) * rx * 1.2,
+      cy - ry * 0.3 + (Math.random()-0.5) * ry * 0.5,
+      1.5 + Math.random() * 3
+    );
+  }
+
+  // Visual ring effect
+  const ring = document.createElement('div');
+  ring.className = 'breath-ring';
+  const rect = wrap.getBoundingClientRect();
+  ring.style.left = `${cx / W * 100}%`;
+  ring.style.top  = `${cy / H * 100}%`;
+  wrap.appendChild(ring);
+  setTimeout(() => ring.remove(), 1300);
+}
+
+// ══════════════════════════════════════════════════════
+//  RE-FOG TIMER
+// ══════════════════════════════════════════════════════
 let refogTimer = null;
 function scheduleRefog() {
   if (refogTimer) return;
   refogTimer = setInterval(() => {
-    const spd = parseFloat(refogInput.value);
+    const spd = parseFloat(refogIn.value);
     if (spd === 0) return;
-    const inc = spd * 0.0022;
+    const inc = spd * 0.0020;
     let any   = false;
     for (let i = 0; i < fogAlpha.length; i++) {
       if (fogAlpha[i] < 1.0) {
         fogAlpha[i]   = Math.min(1, fogAlpha[i]   + inc);
-        smearAlpha[i] = Math.max(0, smearAlpha[i] - inc * 0.35);
+        smearAlpha[i] = Math.max(0, smearAlpha[i] - inc * 0.3);
         any = true;
       }
     }
@@ -377,142 +510,9 @@ function scheduleRefog() {
   }, 30);
 }
 
-// ══════════════════════════════════════════
-//  HAND LANDMARKS → PALM WIPE REGION
-//
-//  We compute:
-//   • Palm center  — average of wrist + 4 metacarpal bases
-//   • Palm radius  — distance wrist → middle-finger base
-//   • Aspect ratio — width vs height of palm bounding box
-//   • Angle        — wrist → middle finger direction
-//
-//  Then wipe an ELLIPSE matching the palm shape.
-//  Only wipe when hand is MOVING (velocity threshold).
-// ══════════════════════════════════════════
-let prevPalmPos   = null;
-let handPresent   = false;
-const MIN_VELOCITY = 2.5;  // px/frame to trigger wipe
-
-// Landmark indices
-const PALM_BASE = [0, 1, 5, 9, 13, 17];  // wrist + metacarpals
-const FINGERTIPS = [4, 8, 12, 16, 20];
-const CONNECTIONS = [
-  [0,1],[1,2],[2,3],[3,4],
-  [0,5],[5,6],[6,7],[7,8],
-  [5,9],[9,10],[10,11],[11,12],
-  [9,13],[13,14],[14,15],[15,16],
-  [13,17],[0,17],[17,18],[18,19],[19,20]
-];
-
-function lmToCanvas(lm, idx) {
-  return { x: (1 - lm[idx].x) * W, y: lm[idx].y * H };
-}
-
-function onHandResults(results) {
-  handCtx.clearRect(0, 0, W, H);
-
-  if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
-    if (handPresent) {
-      handPresent = false;
-      prevPalmPos = null;
-      badge.classList.remove('on');
-      dot.classList.remove('active');
-    }
-    return;
-  }
-
-  handPresent = true;
-  badge.classList.add('on');
-  dot.classList.add('active');
-
-  const lm = results.multiHandLandmarks[0];
-
-  // ── Palm center ──
-  const palmPts = PALM_BASE.map(i => lmToCanvas(lm, i));
-  const palmCx  = palmPts.reduce((s,p)=>s+p.x,0) / palmPts.length;
-  const palmCy  = palmPts.reduce((s,p)=>s+p.y,0) / palmPts.length;
-
-  // ── Palm size & angle (wrist → middle-finger base) ──
-  const wrist   = lmToCanvas(lm, 0);
-  const midBase = lmToCanvas(lm, 9);
-  const palmLen = Math.hypot(midBase.x - wrist.x, midBase.y - wrist.y);
-  const angle   = Math.atan2(midBase.y - wrist.y, midBase.x - wrist.x);
-
-  // ── Wipe ellipse dimensions ──
-  const scale  = parseFloat(wipeSzInput.value);
-  const rx     = palmLen * 0.72 * scale;   // along fingers
-  const ry     = palmLen * 0.52 * scale;   // across palm
-
-  // ── Velocity gate — only wipe if palm is moving ──
-  const vel = prevPalmPos
-    ? Math.hypot(palmCx - prevPalmPos.x, palmCy - prevPalmPos.y)
-    : 0;
-
-  if (vel > MIN_VELOCITY || !prevPalmPos) {
-    wipeFogEllipse(palmCx, palmCy, rx, ry, angle);
-
-    // Fill path between frames for smooth stroke
-    if (prevPalmPos && vel > 4) {
-      const steps = Math.ceil(vel / (rx * 0.5));
-      for (let s = 1; s < steps; s++) {
-        const ix = prevPalmPos.x + (palmCx - prevPalmPos.x) * s / steps;
-        const iy = prevPalmPos.y + (palmCy - prevPalmPos.y) * s / steps;
-        wipeFogEllipse(ix, iy, rx, ry, angle);
-      }
-    }
-  }
-  prevPalmPos = { x: palmCx, y: palmCy };
-
-  // ── Draw skeleton ──
-  drawSkeleton(lm, palmCx, palmCy, rx, ry, angle);
-}
-
-function drawSkeleton(lm, pcx, pcy, rx, ry, angle) {
-  handCtx.save();
-
-  // Bones
-  handCtx.strokeStyle = 'rgba(120,195,255,0.4)';
-  handCtx.lineWidth   = 1.5;
-  handCtx.lineCap     = 'round';
-  for (const [a,b] of CONNECTIONS) {
-    const pa = lmToCanvas(lm, a), pb = lmToCanvas(lm, b);
-    handCtx.beginPath();
-    handCtx.moveTo(pa.x, pa.y);
-    handCtx.lineTo(pb.x, pb.y);
-    handCtx.stroke();
-  }
-
-  // Joints
-  for (let i = 0; i < 21; i++) {
-    const p = lmToCanvas(lm, i);
-    const r = FINGERTIPS.includes(i) ? 5 : 2.5;
-    handCtx.beginPath();
-    handCtx.arc(p.x, p.y, r, 0, Math.PI * 2);
-    handCtx.fillStyle = FINGERTIPS.includes(i)
-      ? 'rgba(200,235,255,0.95)'
-      : 'rgba(100,175,255,0.7)';
-    handCtx.fill();
-  }
-
-  // Palm wipe region outline (faint ellipse)
-  handCtx.save();
-  handCtx.translate(pcx, pcy);
-  handCtx.rotate(angle);
-  handCtx.strokeStyle = 'rgba(140,200,255,0.18)';
-  handCtx.lineWidth   = 1;
-  handCtx.setLineDash([4, 5]);
-  handCtx.beginPath();
-  handCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-  handCtx.stroke();
-  handCtx.restore();
-
-  handCtx.restore();
-}
-
-// ══════════════════════════════════════════
-//  MOUSE FALLBACK (still works)
-// ══════════════════════════════════════════
-let mouseDown = false;
+// ══════════════════════════════════════════════════════
+//  MOUSE / TOUCH  →  DRAW MODE
+// ══════════════════════════════════════════════════════
 function getPos(e) {
   const rect = fogCanvas.getBoundingClientRect();
   const src  = e.touches ? e.touches[0] : e;
@@ -521,78 +521,206 @@ function getPos(e) {
     y: (src.clientY - rect.top)  * (H / rect.height)
   };
 }
-fogCanvas.addEventListener('mousedown',  e => { mouseDown = true; const p = getPos(e); wipeFogCircle(p.x, p.y, 36); });
-fogCanvas.addEventListener('mousemove',  e => { if (mouseDown) { const p = getPos(e); wipeFogCircle(p.x, p.y, 36); } });
-fogCanvas.addEventListener('mouseup',    () => mouseDown = false);
-fogCanvas.addEventListener('mouseleave', () => mouseDown = false);
-fogCanvas.addEventListener('touchstart', e => { e.preventDefault(); const p = getPos(e); wipeFogCircle(p.x, p.y, 36); }, { passive:false });
-fogCanvas.addEventListener('touchmove',  e => { e.preventDefault(); const p = getPos(e); wipeFogCircle(p.x, p.y, 36); }, { passive:false });
 
-// ══════════════════════════════════════════
-//  BUTTONS
-// ══════════════════════════════════════════
-clearBtn.addEventListener('click', () => {
-  fogAlpha.fill(1.0); smearAlpha.fill(0.0);
-  if (refogTimer) { clearInterval(refogTimer); refogTimer = null; }
+fogCanvas.addEventListener('mousemove', e => {
+  const { x, y } = getPos(e);
+  cursorX = x; cursorY = y;
+  if (isDrawing) {
+    drawOnFog(x, y);
+    pillDraw.classList.add('on');
+  }
 });
-snapBtn.addEventListener('click', () => {
-  const m = document.createElement('canvas');
-  m.width = W; m.height = H;
-  const mc = m.getContext('2d');
-  mc.drawImage(camCanvas, 0, 0);
-  mc.drawImage(fogCanvas, 0, 0);
-  mc.drawImage(handCanvas, 0, 0);
-  const a = document.createElement('a');
-  a.download = `foggy-${Date.now()}.png`;
-  a.href = m.toDataURL();
-  a.click();
+fogCanvas.addEventListener('mousedown', e => {
+  isDrawing = true;
+  const { x, y } = getPos(e);
+  drawOnFog(x, y);
+  pillDraw.classList.add('on');
 });
+fogCanvas.addEventListener('mouseup',    () => { isDrawing = false; pillDraw.classList.remove('on'); });
+fogCanvas.addEventListener('mouseleave', () => { isDrawing = false; pillDraw.classList.remove('on'); cursorX = -100; });
 
-// ══════════════════════════════════════════
-//  MEDIAPIPE INIT  (auto-start)
-// ══════════════════════════════════════════
+fogCanvas.addEventListener('touchstart', e => {
+  e.preventDefault(); isDrawing = true;
+  const { x, y } = getPos(e);
+  cursorX = x; cursorY = y;
+  drawOnFog(x, y); pillDraw.classList.add('on');
+}, { passive: false });
+fogCanvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const { x, y } = getPos(e);
+  cursorX = x; cursorY = y;
+  drawOnFog(x, y);
+}, { passive: false });
+fogCanvas.addEventListener('touchend', () => { isDrawing = false; pillDraw.classList.remove('on'); });
+
+// ══════════════════════════════════════════════════════
+//  MICROPHONE  →  BLOW MODE
+// ══════════════════════════════════════════════════════
+let lastBlow = 0;
+
+async function initMic() {
+  try {
+    const stream   = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    const audioCtx = new AudioContext();
+    const source   = audioCtx.createMediaStreamSource(stream);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    const buf = new Uint8Array(analyser.frequencyBinCount);
+
+    statusEl.textContent = '✅ Mic ready — blow into mic to fog the mirror!';
+
+    setInterval(() => {
+      analyser.getByteFrequencyData(buf);
+
+      // Breath = broadband noise — check low + mid frequency average
+      const low = buf.slice(0, 30).reduce((s,v)=>s+v,0) / 30;
+      const mid = buf.slice(30,80).reduce((s,v)=>s+v,0) / 50;
+      const avg = (low * 0.6 + mid * 0.4);
+
+      const thresh = parseFloat(blowSensIn.value) * 2.2;
+      const now = Date.now();
+
+      if (avg > thresh && now - lastBlow > 300) {
+        lastBlow = now;
+        // Breath hits lower-center of mirror (like real glass)
+        const bx = W * 0.5 + (Math.random()-0.5) * 80;
+        const by = H * 0.62 + (Math.random()-0.5) * 50;
+        addFogBloom(bx, by, avg - thresh);
+        pillBlow.classList.add('on');
+        setTimeout(() => pillBlow.classList.remove('on'), 600);
+      }
+    }, 60);
+  } catch(e) {
+    statusEl.textContent = '⚠️ Mic not available — blow feature disabled';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  MEDIAPIPE HANDS  →  WIPE MODE
+// ══════════════════════════════════════════════════════
+const PALM_IDS = [0, 1, 5, 9, 13, 17];
+const TIPS     = [4, 8, 12, 16, 20];
+const BONES    = [
+  [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
+  [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
+  [13,17],[0,17],[17,18],[18,19],[19,20]
+];
+const MIN_VEL = 2.8;
+let prevPalm  = null;
+
+function lmPt(lm, i) {
+  return { x: (1 - lm[i].x) * W, y: lm[i].y * H };
+}
+
+function onHandResults(res) {
+  handCtx.clearRect(0, 0, W, H);
+  if (!res.multiHandLandmarks?.length) {
+    pillHand.classList.remove('on');
+    prevPalm = null; return;
+  }
+  pillHand.classList.add('on');
+
+  const lm      = res.multiHandLandmarks[0];
+  const palmPts = PALM_IDS.map(i => lmPt(lm, i));
+  const pcx     = palmPts.reduce((s,p)=>s+p.x,0) / palmPts.length;
+  const pcy     = palmPts.reduce((s,p)=>s+p.y,0) / palmPts.length;
+  const wrist   = lmPt(lm, 0), mid = lmPt(lm, 9);
+  const pLen    = Math.hypot(mid.x-wrist.x, mid.y-wrist.y);
+  const angle   = Math.atan2(mid.y-wrist.y, mid.x-wrist.x);
+  const rx = pLen * 0.76, ry = pLen * 0.54;
+
+  // Velocity gate
+  const vel = prevPalm ? Math.hypot(pcx-prevPalm.x, pcy-prevPalm.y) : 0;
+  if (vel > MIN_VEL || !prevPalm) {
+    wipePalm(pcx, pcy, rx, ry, angle);
+    if (prevPalm && vel > 5) {
+      const steps = Math.ceil(vel / (rx * 0.45));
+      for (let s = 1; s < steps; s++) {
+        wipePalm(
+          prevPalm.x + (pcx-prevPalm.x)*s/steps,
+          prevPalm.y + (pcy-prevPalm.y)*s/steps,
+          rx, ry, angle
+        );
+      }
+    }
+  }
+  prevPalm = { x: pcx, y: pcy };
+
+  // Draw skeleton
+  handCtx.save();
+  handCtx.strokeStyle = 'rgba(110,195,255,0.38)';
+  handCtx.lineWidth   = 1.5; handCtx.lineCap = 'round';
+  BONES.forEach(([a,b]) => {
+    const pa = lmPt(lm,a), pb = lmPt(lm,b);
+    handCtx.beginPath();
+    handCtx.moveTo(pa.x,pa.y); handCtx.lineTo(pb.x,pb.y);
+    handCtx.stroke();
+  });
+  for (let i=0;i<21;i++) {
+    const p = lmPt(lm,i), r = TIPS.includes(i) ? 5 : 2.5;
+    handCtx.beginPath(); handCtx.arc(p.x,p.y,r,0,Math.PI*2);
+    handCtx.fillStyle = TIPS.includes(i) ? 'rgba(210,240,255,0.95)' : 'rgba(90,170,255,0.7)';
+    handCtx.fill();
+  }
+  // Dashed palm ellipse
+  handCtx.save();
+  handCtx.translate(pcx,pcy); handCtx.rotate(angle);
+  handCtx.setLineDash([4,6]);
+  handCtx.strokeStyle = 'rgba(130,200,255,0.2)';
+  handCtx.lineWidth   = 1;
+  handCtx.beginPath(); handCtx.ellipse(0,0,rx,ry,0,0,Math.PI*2);
+  handCtx.stroke();
+  handCtx.restore();
+  handCtx.restore();
+}
+
 function startMediaPipe() {
-  loaderMsg.textContent = 'Loading hand model…';
-
   const hands = new Hands({
     locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
   });
-  hands.setOptions({
-    maxNumHands: 1,
-    modelComplexity: 1,
-    minDetectionConfidence: 0.72,
-    minTrackingConfidence: 0.60
-  });
+  hands.setOptions({ maxNumHands:1, modelComplexity:1, minDetectionConfidence:0.72, minTrackingConfidence:0.60 });
   hands.onResults(onHandResults);
 
   const cam = new Camera(video, {
     onFrame: async () => { await hands.send({ image: video }); },
     width: W, height: H
   });
-
   cam.start().then(() => {
-    statusEl.textContent = '✅ Camera + hand tracking active — wave your hand to wipe fog!';
-    // Wait a bit for model to load then hide loader
-    setTimeout(() => { loader.classList.add('gone'); }, 1800);
+    setTimeout(() => { loader.classList.add('gone'); }, 1500);
     requestAnimationFrame(renderLoop);
-  }).catch(err => {
-    loaderMsg.textContent = '❌ Error: ' + err.message;
-  });
+    // Start mic after camera is up
+    initMic();
+    statusEl.textContent = '✅ All systems ready!';
+  }).catch(err => { loaderMsg.textContent = '❌ ' + err.message; });
 }
 
-// ══════════════════════════════════════════
-//  START
-// ══════════════════════════════════════════
-navigator.mediaDevices.getUserMedia({ video: { width: W, height: H, facingMode: 'user' }, audio: false })
+// ══════════════════════════════════════════════════════
+//  BUTTONS
+// ══════════════════════════════════════════════════════
+document.getElementById('clearBtn').addEventListener('click', () => {
+  fogAlpha.fill(1.0); smearAlpha.fill(0.0);
+  if (refogTimer) { clearInterval(refogTimer); refogTimer = null; }
+});
+document.getElementById('snapBtn').addEventListener('click', () => {
+  const m = document.createElement('canvas');
+  m.width = W; m.height = H;
+  const mc = m.getContext('2d');
+  mc.drawImage(camCanvas,0,0); mc.drawImage(fogCanvas,0,0); mc.drawImage(handCanvas,0,0);
+  const a = document.createElement('a');
+  a.download = `foggy-${Date.now()}.png`; a.href = m.toDataURL(); a.click();
+});
+
+// ══════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════
+navigator.mediaDevices.getUserMedia({ video:{ width:W, height:H, facingMode:'user' }, audio:false })
   .then(stream => {
-    video.srcObject = stream;
-    video.play();
+    video.srcObject = stream; video.play();
+    loaderMsg.textContent = 'Loading hand model…';
     startMediaPipe();
   })
-  .catch(err => {
-    loaderMsg.textContent = '❌ Camera error: ' + err.message;
-    statusEl.textContent  = err.message;
-  });
+  .catch(err => { loaderMsg.textContent = '❌ Camera: ' + err.message; });
 </script>
 </body>
 </html>
