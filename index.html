@@ -16,89 +16,144 @@
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       font-family: 'Inter', sans-serif;
-      color: #dde8f2; overflow: hidden; gap: 14px;
+      color: #dde8f2; overflow: hidden; gap: 12px;
     }
 
     /* ── Top bar ── */
     .topbar {
-      display: flex; align-items: center; gap: 16px;
+      display: flex; align-items: center; gap: 18px;
     }
-    .topbar h1 {
-      font-size: 0.9rem; font-weight: 400;
+    .logo {
+      font-size: 0.85rem; font-weight: 400;
       letter-spacing: 4px; text-transform: uppercase; color: #7eb8f7;
     }
 
-    /* Mode pills */
-    .modes {
-      display: flex; gap: 7px;
+    /* ── Gesture pills ── */
+    .gpills {
+      display: flex; gap: 7px; align-items: center;
     }
-    .pill {
-      font-size: 0.65rem; letter-spacing: 1px;
-      padding: 3px 10px; border-radius: 20px;
+    .gpill {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.63rem; letter-spacing: 1px; text-transform: uppercase;
+      padding: 4px 11px; border-radius: 20px;
       border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.28);
       background: transparent;
-      transition: all 0.3s;
+      transition: all 0.25s;
+      user-select: none;
     }
-    .pill.on {
-      color: #fff;
-      border-color: rgba(126,184,247,0.6);
-      background: rgba(126,184,247,0.15);
-      box-shadow: 0 0 10px rgba(126,184,247,0.25);
+    .gpill .icon { font-size: 0.85rem; }
+    .gpill.active-draw {
+      color: #ffd09a; border-color: rgba(255,190,100,0.6);
+      background: rgba(255,180,80,0.12);
+      box-shadow: 0 0 14px rgba(255,180,80,0.22);
     }
-    .pill.blow.on {
-      border-color: rgba(248,180,120,0.6);
-      background: rgba(248,180,120,0.12);
-      box-shadow: 0 0 10px rgba(248,180,120,0.2);
-      color: #f8c09a;
+    .gpill.active-wipe {
+      color: #90d4ff; border-color: rgba(100,195,255,0.6);
+      background: rgba(80,175,255,0.12);
+      box-shadow: 0 0 14px rgba(80,175,255,0.22);
     }
-    .pill.hand.on {
-      border-color: rgba(100,220,140,0.6);
-      background: rgba(100,220,140,0.12);
-      box-shadow: 0 0 10px rgba(100,220,140,0.2);
-      color: #90eeaa;
+    .gpill.active-blow {
+      color: #aaffcc; border-color: rgba(100,240,160,0.6);
+      background: rgba(80,220,140,0.12);
+      box-shadow: 0 0 14px rgba(80,220,140,0.22);
     }
 
     /* ── Canvas stack ── */
     #wrap {
       position: relative; border-radius: 14px; overflow: hidden;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 70px rgba(0,0,0,0.8);
-      cursor: none;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 80px rgba(0,0,0,0.85);
     }
     #wrap canvas { display: block; width: 640px; height: 480px; }
-    #camCanvas { position: relative; }
-    #fogCanvas, #handCanvas, #uiCanvas { position: absolute; top:0; left:0; }
-    #fogCanvas  { pointer-events: all; }
-    #handCanvas { pointer-events: none; }
-    #uiCanvas   { pointer-events: none; }
+    #camCanvas  { position: relative; }
+    #fogCanvas, #handCanvas, #uiCanvas { position: absolute; top:0; left:0; pointer-events: none; }
 
-    /* ── Breath bloom overlay (CSS animated) ── */
+    /* ── Gesture guide overlay (bottom) ── */
+    #guide {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 28px 20px 12px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.6));
+      display: flex; justify-content: center; gap: 28px;
+      pointer-events: none; z-index: 5;
+    }
+    .g-item {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    .g-icon { font-size: 1.4rem; }
+    .g-label {
+      font-size: 0.58rem; letter-spacing: 1px; text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* ── Loader ── */
+    #loader {
+      position: absolute; inset: 0;
+      background: rgba(11,12,15,0.95);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px; z-index: 40; border-radius: 14px;
+      transition: opacity 0.7s;
+    }
+    #loader.gone { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 38px; height: 38px;
+      border: 3px solid rgba(126,184,247,0.12);
+      border-top-color: #7eb8f7; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loaderMsg  { font-size: 0.78rem; color: #7eb8f7; letter-spacing: 1.2px; }
+    #loaderSub  { font-size: 0.65rem; color: #4a6275; letter-spacing: 0.8px; }
+
+    /* ── Gesture label (centre of canvas) ── */
+    #gestureLabel {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase;
+      padding: 4px 14px; border-radius: 20px;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; z-index: 20;
+      white-space: nowrap;
+    }
+    #gestureLabel.show-draw {
+      opacity: 1; color: #ffd09a;
+      background: rgba(0,0,0,0.55); border: 1px solid rgba(255,190,100,0.4);
+    }
+    #gestureLabel.show-wipe {
+      opacity: 1; color: #90d4ff;
+      background: rgba(0,0,0,0.55); border: 1px solid rgba(100,195,255,0.4);
+    }
+    #gestureLabel.show-blow {
+      opacity: 1; color: #aaffcc;
+      background: rgba(0,0,0,0.55); border: 1px solid rgba(100,240,160,0.4);
+    }
+
+    /* ── Breath ring animation ── */
     .breath-ring {
       position: absolute; border-radius: 50%; pointer-events: none;
-      border: 1.5px solid rgba(255,255,255,0.35);
-      animation: breathRing 1.2s ease-out forwards;
-      transform: translate(-50%,-50%);
+      border: 1.5px solid rgba(200,255,220,0.45);
+      animation: bRing 1.4s ease-out forwards;
+      transform: translate(-50%, -50%);
     }
-    @keyframes breathRing {
-      0%   { width: 20px; height: 20px; opacity: 0.8; }
-      100% { width: 220px; height: 160px; opacity: 0; }
+    @keyframes bRing {
+      0%   { width: 10px;  height: 8px;   opacity: 0.9; }
+      100% { width: 230px; height: 170px; opacity: 0; }
     }
 
-    /* ── Bottom controls ── */
+    /* ── Controls ── */
     #controls {
-      display: flex; gap: 10px;
+      display: flex; gap: 9px;
       align-items: center; flex-wrap: wrap; justify-content: center;
     }
     .cg {
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.035);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px; padding: 6px 13px;
       display: flex; align-items: center; gap: 9px;
-      font-size: 0.72rem; color: #7a96aa;
+      font-size: 0.7rem; color: #6a8fa8;
     }
     input[type="range"] {
-      -webkit-appearance: none; width: 75px; height: 3px;
-      background: rgba(126,184,247,0.2); border-radius: 2px; cursor: pointer;
+      -webkit-appearance: none; width: 72px; height: 3px;
+      background: rgba(126,184,247,0.18); border-radius: 2px; cursor: pointer;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none; width: 12px; height: 12px;
@@ -106,100 +161,63 @@
       box-shadow: 0 0 6px #7eb8f7; cursor: pointer;
     }
     .btn {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.09);
-      color: #8ab4d4; padding: 6px 14px; border-radius: 8px;
-      font-size: 0.72rem; font-family: inherit; cursor: pointer;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #7aaccc; padding: 6px 14px; border-radius: 8px;
+      font-size: 0.7rem; font-family: inherit; cursor: pointer;
       transition: background 0.2s, box-shadow 0.2s;
     }
-    .btn:hover { background: rgba(126,184,247,0.13); box-shadow: 0 0 10px rgba(126,184,247,0.2); }
+    .btn:hover { background: rgba(126,184,247,0.12); box-shadow: 0 0 10px rgba(126,184,247,0.2); }
 
-    #statusEl { font-size: 0.68rem; color: #3d5566; letter-spacing: 0.8px; min-height: 14px; }
-
-    /* ── Loader ── */
-    #loader {
-      position: absolute; inset: 0; background: rgba(11,12,15,0.92);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 14px; z-index: 40; border-radius: 14px;
-      transition: opacity 0.6s;
-    }
-    #loader.gone { opacity: 0; pointer-events: none; }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid rgba(126,184,247,0.12);
-      border-top-color: #7eb8f7; border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #loaderMsg { font-size: 0.78rem; color: #7eb8f7; letter-spacing: 1.2px; }
-
-    /* ── Hint bar (bottom of canvas) ── */
-    #hint {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.55));
-      padding: 18px 16px 10px;
-      display: flex; justify-content: center; gap: 18px;
-      pointer-events: none; z-index: 5;
-    }
-    .hint-item { font-size: 0.62rem; color: rgba(255,255,255,0.4); letter-spacing: 0.8px; }
+    #statusEl { font-size: 0.67rem; color: #354a58; letter-spacing: 0.8px; min-height: 14px; }
   </style>
 </head>
 <body>
 
-<!-- Top bar -->
 <div class="topbar">
-  <h1>🪟 Foggy Mirror</h1>
-  <div class="modes">
-    <span class="pill draw" id="pillDraw">✍️ DRAW</span>
-    <span class="pill blow" id="pillBlow">💨 BLOW</span>
-    <span class="pill hand" id="pillHand">🖐 HAND</span>
+  <span class="logo">🪟 Foggy Mirror</span>
+  <div class="gpills">
+    <div class="gpill" id="pillDraw"><span class="icon">☝️</span> Draw</div>
+    <div class="gpill" id="pillWipe"><span class="icon">🖐</span> Wipe</div>
+    <div class="gpill" id="pillBlow"><span class="icon">✊</span> Blow</div>
   </div>
 </div>
 
-<!-- Canvas stack -->
 <div id="wrap">
   <canvas id="camCanvas" width="640" height="480"></canvas>
   <canvas id="fogCanvas" width="640" height="480"></canvas>
   <canvas id="handCanvas" width="640" height="480"></canvas>
   <canvas id="uiCanvas"   width="640" height="480"></canvas>
 
-  <div id="hint">
-    <span class="hint-item">✍️ Drag to write on fog</span>
-    <span class="hint-item">💨 Blow into mic → fog appears</span>
-    <span class="hint-item">🖐 Wave hand → wipe fog</span>
+  <div id="gestureLabel"></div>
+
+  <div id="guide">
+    <div class="g-item"><span class="g-icon">☝️</span><span class="g-label">Index finger → Draw</span></div>
+    <div class="g-item"><span class="g-icon">🖐</span><span class="g-label">Open palm + move → Wipe</span></div>
+    <div class="g-item"><span class="g-icon">✊</span><span class="g-label">Fist → Blow fog</span></div>
   </div>
+
   <div id="loader">
     <div class="spinner"></div>
     <p id="loaderMsg">Starting camera…</p>
+    <p id="loaderSub">Allow camera access when prompted</p>
   </div>
 </div>
 
-<!-- Controls -->
 <div id="controls">
-  <div class="cg">
-    <span>Draw size</span>
-    <input type="range" id="drawSize" min="4" max="28" value="10"/>
-  </div>
-  <div class="cg">
-    <span>Re-fog</span>
-    <input type="range" id="refogSpeed" min="0" max="6" step="0.1" value="1.0"/>
-  </div>
-  <div class="cg">
-    <span>Blow sensitivity</span>
-    <input type="range" id="blowSens" min="5" max="60" value="22"/>
-  </div>
+  <div class="cg"><span>Draw size</span><input type="range" id="drawSize" min="4" max="22" value="9"/></div>
+  <div class="cg"><span>Re-fog speed</span><input type="range" id="refogSpeed" min="0" max="6" step="0.1" value="1.0"/></div>
+  <div class="cg"><span>Blow strength</span><input type="range" id="blowStr" min="0.2" max="1.5" step="0.05" value="0.7"/></div>
   <button class="btn" id="clearBtn">🌫 Re-fog All</button>
   <button class="btn" id="snapBtn">📸 Snapshot</button>
 </div>
-
 <div id="statusEl">Initialising…</div>
 
 <video id="video" autoplay playsinline style="display:none"></video>
 
 <script>
 // ══════════════════════════════════════════════════════
-//  CONSTANTS & DOM
+//  SETUP
 // ══════════════════════════════════════════════════════
 const W = 640, H = 480;
 const video      = document.getElementById('video');
@@ -207,20 +225,21 @@ const camCanvas  = document.getElementById('camCanvas');
 const fogCanvas  = document.getElementById('fogCanvas');
 const handCanvas = document.getElementById('handCanvas');
 const uiCanvas   = document.getElementById('uiCanvas');
-const wrap       = document.getElementById('wrap');
 const camCtx     = camCanvas.getContext('2d');
 const fogCtx     = fogCanvas.getContext('2d');
 const handCtx    = handCanvas.getContext('2d');
 const uiCtx      = uiCanvas.getContext('2d');
+const wrap       = document.getElementById('wrap');
 const loader     = document.getElementById('loader');
 const loaderMsg  = document.getElementById('loaderMsg');
 const statusEl   = document.getElementById('statusEl');
+const gestureLabel = document.getElementById('gestureLabel');
 const pillDraw   = document.getElementById('pillDraw');
+const pillWipe   = document.getElementById('pillWipe');
 const pillBlow   = document.getElementById('pillBlow');
-const pillHand   = document.getElementById('pillHand');
 const drawSzIn   = document.getElementById('drawSize');
 const refogIn    = document.getElementById('refogSpeed');
-const blowSensIn = document.getElementById('blowSens');
+const blowStrIn  = document.getElementById('blowStr');
 
 // ══════════════════════════════════════════════════════
 //  FOG STATE
@@ -229,13 +248,13 @@ const fogAlpha   = new Float32Array(W * H).fill(1.0);
 const smearAlpha = new Float32Array(W * H).fill(0.0);
 
 // ══════════════════════════════════════════════════════
-//  NOISE TEXTURE
+//  VALUE NOISE
 // ══════════════════════════════════════════════════════
 const NGRID = new Float32Array(256 * 256);
 for (let i = 0; i < NGRID.length; i++) NGRID[i] = Math.random();
 let noiseT = 0;
-function sampleNoise(px, py) {
-  const nx = ((px * 0.09 + noiseT * 0.18) | 0) & 255;
+function sn(px, py) {
+  const nx = ((px * 0.09 + noiseT * 0.15) | 0) & 255;
   const ny = ((py * 0.09)                 | 0) & 255;
   return NGRID[nx + ny * 256];
 }
@@ -244,35 +263,30 @@ function sampleNoise(px, py) {
 //  WATER DROPS
 // ══════════════════════════════════════════════════════
 const drops = [];
-function spawnDrop(x, y, size) {
+function spawnDrop(x, y, sz) {
   drops.push({
     x: x ?? (20 + Math.random() * (W - 40)),
     y: y ?? (Math.random() * H * 0.3),
-    r: size ?? (2 + Math.random() * 4),
+    r: sz ?? (1.8 + Math.random() * 3.8),
     vy: 0.2 + Math.random() * 0.5,
     trail: []
   });
 }
-for (let i = 0; i < 20; i++) spawnDrop();
+for (let i = 0; i < 22; i++) spawnDrop();
 
 // ══════════════════════════════════════════════════════
-//  CURSOR POSITION
-// ══════════════════════════════════════════════════════
-let cursorX = -100, cursorY = -100, isDrawing = false;
-
-// ══════════════════════════════════════════════════════
-//  MAIN RENDER LOOP
+//  RENDER LOOP
 // ══════════════════════════════════════════════════════
 function renderLoop() {
   noiseT += 0.005;
 
-  // 1. Webcam — mirrored like a real mirror
+  // 1. Webcam — mirror flip
   camCtx.save();
   camCtx.translate(W, 0); camCtx.scale(-1, 1);
   camCtx.drawImage(video, 0, 0, W, H);
   camCtx.restore();
 
-  // 2. Build fog pixel-by-pixel
+  // 2. Fog pixel pass
   const img = fogCtx.createImageData(W, H);
   const d   = img.data;
   for (let py = 0; py < H; py++) {
@@ -281,211 +295,61 @@ function renderLoop() {
       let   a  = fogAlpha[i];
       if (a < 0.004) { d[i*4+3] = 0; continue; }
 
-      const n  = sampleNoise(px, py);
-      // Warm breath tint — slightly yellowish-white like real condensation
-      const r  = (220 + n * 18) | 0;
-      const g  = (228 + n * 12) | 0;
-      const bv = (235 + n *  6) | 0;
+      const n  = sn(px, py);
+      const r  = (220 + n * 17) | 0;
+      const g  = (229 + n * 11) | 0;
+      const bv = (237 + n *  5) | 0;
 
-      // Vignette — thicker at edges
       const vx   = (px / W - 0.5) * 2;
       const vy   = (py / H - 0.5) * 2;
-      const vign = Math.min(1.0, 0.66 + 0.34 * (vx*vx + vy*vy) * 1.7);
+      const vign = Math.min(1.0, 0.65 + 0.35 * (vx*vx + vy*vy) * 1.7);
       let   fa   = Math.min(1, a * vign);
 
-      // Smear residue
       const sm = smearAlpha[i];
       if (sm > 0.03 && fa > 0.03) fa = Math.max(fa * 0.015, sm * 0.44);
 
-      d[i*4]   = r;
-      d[i*4+1] = g;
-      d[i*4+2] = bv;
-      d[i*4+3] = Math.round(fa * 255);
+      d[i*4]=r; d[i*4+1]=g; d[i*4+2]=bv; d[i*4+3]=Math.round(fa*255);
     }
   }
   fogCtx.putImageData(img, 0, 0);
 
   // 3. Glass sheen
   const sheen = fogCtx.createLinearGradient(0, 0, W*0.5, H*0.5);
-  sheen.addColorStop(0, 'rgba(255,255,255,0.06)');
-  sheen.addColorStop(1, 'rgba(255,255,255,0.00)');
-  fogCtx.fillStyle = sheen;
-  fogCtx.fillRect(0, 0, W, H);
+  sheen.addColorStop(0, 'rgba(255,255,255,0.055)');
+  sheen.addColorStop(1, 'rgba(255,255,255,0.000)');
+  fogCtx.fillStyle = sheen; fogCtx.fillRect(0, 0, W, H);
 
-  // 4. Water drops on top of fog
+  // 4. Water drops
   renderDrops();
-
-  // 5. Custom finger cursor (UI canvas)
-  uiCtx.clearRect(0, 0, W, H);
-  if (cursorX > 0) drawCursor();
 
   requestAnimationFrame(renderLoop);
 }
 
-// ══════════════════════════════════════════════════════
-//  CUSTOM CURSOR — fingertip style
-// ══════════════════════════════════════════════════════
-function drawCursor() {
-  const r = parseInt(drawSzIn.value);
-  uiCtx.save();
-  // Outer ring
-  uiCtx.beginPath();
-  uiCtx.arc(cursorX, cursorY, r + 3, 0, Math.PI * 2);
-  uiCtx.strokeStyle = isDrawing
-    ? 'rgba(255,200,150,0.9)'
-    : 'rgba(200,225,255,0.55)';
-  uiCtx.lineWidth = 1.5;
-  uiCtx.stroke();
-  // Inner dot
-  uiCtx.beginPath();
-  uiCtx.arc(cursorX, cursorY, 2.5, 0, Math.PI * 2);
-  uiCtx.fillStyle = isDrawing ? '#f8c09a' : 'rgba(255,255,255,0.7)';
-  uiCtx.fill();
-  uiCtx.restore();
-}
-
-// ══════════════════════════════════════════════════════
-//  WATER DROP RENDER
-// ══════════════════════════════════════════════════════
 function renderDrops() {
-  if (Math.random() < 0.013) spawnDrop();
-
+  if (Math.random() < 0.014) spawnDrop();
   for (let i = drops.length - 1; i >= 0; i--) {
     const dr = drops[i];
     dr.trail.push({ x: dr.x, y: dr.y });
     if (dr.trail.length > 22) dr.trail.shift();
-    dr.y  += dr.vy;
-    dr.vy += 0.009;
-    dr.x  += (Math.random() - 0.5) * 0.3;
-
+    dr.y += dr.vy; dr.vy += 0.009;
+    dr.x += (Math.random() - 0.5) * 0.3;
     const fi = Math.min(W*H-1, (dr.y|0)*W + (dr.x|0));
-    if (dr.y > H + 10 || (fogAlpha[fi] < 0.07 && dr.y > 50)) {
-      drops.splice(i, 1); continue;
-    }
-
-    // Trail streak
+    if (dr.y > H+10 || (fogAlpha[fi] < 0.07 && dr.y > 50)) { drops.splice(i,1); continue; }
     if (dr.trail.length > 2) {
       fogCtx.beginPath();
-      fogCtx.strokeStyle = 'rgba(168,208,238,0.28)';
-      fogCtx.lineWidth   = dr.r * 0.6;
-      fogCtx.lineCap     = 'round';
+      fogCtx.strokeStyle = 'rgba(165,208,238,0.28)';
+      fogCtx.lineWidth = dr.r * 0.58; fogCtx.lineCap = 'round';
       fogCtx.moveTo(dr.trail[0].x, dr.trail[0].y);
       dr.trail.forEach(p => fogCtx.lineTo(p.x, p.y));
       fogCtx.stroke();
     }
-    // Bead
-    const g = fogCtx.createRadialGradient(
-      dr.x - dr.r*0.3, dr.y - dr.r*0.35, 0,
-      dr.x, dr.y, dr.r
-    );
+    const g = fogCtx.createRadialGradient(dr.x-dr.r*0.3, dr.y-dr.r*0.35, 0, dr.x, dr.y, dr.r);
     g.addColorStop(0,   'rgba(255,255,255,0.95)');
     g.addColorStop(0.45,'rgba(200,225,245,0.6)');
-    g.addColorStop(1,   'rgba(140,185,220,0.12)');
-    fogCtx.beginPath();
-    fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI*2);
-    fogCtx.fillStyle = g;
-    fogCtx.fill();
+    g.addColorStop(1,   'rgba(135,182,218,0.12)');
+    fogCtx.beginPath(); fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI*2);
+    fogCtx.fillStyle = g; fogCtx.fill();
   }
-}
-
-// ══════════════════════════════════════════════════════
-//  WIPE FOG — DRAW MODE (thin finger stroke)
-//  Clears a small circle so writing is visible through
-// ══════════════════════════════════════════════════════
-function drawOnFog(cx, cy) {
-  const r  = parseInt(drawSzIn.value);
-  const r2 = r * r;
-  const x0 = Math.max(0, cx - r | 0);
-  const x1 = Math.min(W-1, cx + r | 0);
-  const y0 = Math.max(0, cy - r | 0);
-  const y1 = Math.min(H-1, cy + r | 0);
-
-  for (let py = y0; py <= y1; py++) {
-    for (let px = x0; px <= x1; px++) {
-      const dx = px-cx, dy = py-cy;
-      const d2 = dx*dx + dy*dy;
-      if (d2 > r2) continue;
-      const t  = 1 - d2/r2;
-      const sm = t*t*t;
-      const i  = py*W+px;
-      const prev = fogAlpha[i];
-      fogAlpha[i]   = Math.max(0, prev - sm * 0.97);
-      smearAlpha[i] = Math.max(smearAlpha[i], sm * prev * 0.35);
-    }
-  }
-  scheduleRefog();
-}
-
-// ══════════════════════════════════════════════════════
-//  WIPE FOG — HAND MODE (palm ellipse)
-// ══════════════════════════════════════════════════════
-function wipePalm(cx, cy, rx, ry, angle) {
-  const cosA = Math.cos(-angle), sinA = Math.sin(-angle);
-  const pad  = Math.max(rx, ry) + 4;
-  const x0   = Math.max(0, (cx-pad)|0);
-  const x1   = Math.min(W-1, (cx+pad)|0);
-  const y0   = Math.max(0, (cy-pad)|0);
-  const y1   = Math.min(H-1, (cy+pad)|0);
-
-  for (let py = y0; py <= y1; py++) {
-    for (let px = x0; px <= x1; px++) {
-      const dx = px-cx, dy = py-cy;
-      const lx = dx*cosA - dy*sinA;
-      const ly = dx*sinA + dy*cosA;
-      const t  = (lx/rx)*(lx/rx) + (ly/ry)*(ly/ry);
-      if (t > 1) continue;
-      const str = (1-t)*(1-t);
-      const i   = py*W+px;
-      const prev = fogAlpha[i];
-      fogAlpha[i]   = Math.max(0, prev - str * 0.85);
-      smearAlpha[i] = Math.max(smearAlpha[i], str * prev * 0.4);
-    }
-  }
-  scheduleRefog();
-}
-
-// ══════════════════════════════════════════════════════
-//  FOG BLOOM — BREATH MODE
-//  Adds fog in an oval patch + spawns droplets
-// ══════════════════════════════════════════════════════
-function addFogBloom(cx, cy, strength) {
-  // Breath hits roughly bottom-center of mirror
-  const rx = 110 + strength * 3;
-  const ry = 75  + strength * 2;
-  const x0 = Math.max(0, (cx-rx)|0);
-  const x1 = Math.min(W-1, (cx+rx)|0);
-  const y0 = Math.max(0, (cy-ry)|0);
-  const y1 = Math.min(H-1, (cy+ry)|0);
-
-  for (let py = y0; py <= y1; py++) {
-    for (let px = x0; px <= x1; px++) {
-      const dx = (px-cx)/rx, dy = (py-cy)/ry;
-      const t  = dx*dx + dy*dy;
-      if (t > 1) continue;
-      const amt = (1-t)*(1-t) * Math.min(1, strength/20) * 0.75;
-      const i   = py*W+px;
-      fogAlpha[i] = Math.min(1.0, fogAlpha[i] + amt);
-    }
-  }
-
-  // Spawn condensation drops in the bloom area
-  const numDrops = 2 + (strength/10 | 0);
-  for (let d = 0; d < numDrops; d++) {
-    spawnDrop(
-      cx + (Math.random()-0.5) * rx * 1.2,
-      cy - ry * 0.3 + (Math.random()-0.5) * ry * 0.5,
-      1.5 + Math.random() * 3
-    );
-  }
-
-  // Visual ring effect
-  const ring = document.createElement('div');
-  ring.className = 'breath-ring';
-  const rect = wrap.getBoundingClientRect();
-  ring.style.left = `${cx / W * 100}%`;
-  ring.style.top  = `${cy / H * 100}%`;
-  wrap.appendChild(ring);
-  setTimeout(() => ring.remove(), 1300);
 }
 
 // ══════════════════════════════════════════════════════
@@ -495,10 +359,8 @@ let refogTimer = null;
 function scheduleRefog() {
   if (refogTimer) return;
   refogTimer = setInterval(() => {
-    const spd = parseFloat(refogIn.value);
-    if (spd === 0) return;
-    const inc = spd * 0.0020;
-    let any   = false;
+    const spd = parseFloat(refogIn.value); if (spd === 0) return;
+    const inc = spd * 0.002; let any = false;
     for (let i = 0; i < fogAlpha.length; i++) {
       if (fogAlpha[i] < 1.0) {
         fogAlpha[i]   = Math.min(1, fogAlpha[i]   + inc);
@@ -511,216 +373,322 @@ function scheduleRefog() {
 }
 
 // ══════════════════════════════════════════════════════
-//  MOUSE / TOUCH  →  DRAW MODE
+//  ☝️  DRAW — index fingertip traces a thin clear path
 // ══════════════════════════════════════════════════════
-function getPos(e) {
-  const rect = fogCanvas.getBoundingClientRect();
-  const src  = e.touches ? e.touches[0] : e;
-  return {
-    x: (src.clientX - rect.left) * (W / rect.width),
-    y: (src.clientY - rect.top)  * (H / rect.height)
-  };
-}
-
-fogCanvas.addEventListener('mousemove', e => {
-  const { x, y } = getPos(e);
-  cursorX = x; cursorY = y;
-  if (isDrawing) {
-    drawOnFog(x, y);
-    pillDraw.classList.add('on');
+function drawOnFog(cx, cy) {
+  const r = parseInt(drawSzIn.value), r2 = r*r;
+  const x0=Math.max(0,cx-r|0), x1=Math.min(W-1,cx+r|0);
+  const y0=Math.max(0,cy-r|0), y1=Math.min(H-1,cy+r|0);
+  for (let py=y0;py<=y1;py++) for (let px=x0;px<=x1;px++) {
+    const dx=px-cx, dy=py-cy, d2=dx*dx+dy*dy;
+    if (d2>r2) continue;
+    const t=(1-d2/r2), sm=t*t*t;
+    const i=py*W+px, prev=fogAlpha[i];
+    fogAlpha[i]   = Math.max(0, prev - sm*0.97);
+    smearAlpha[i] = Math.max(smearAlpha[i], sm*prev*0.32);
   }
-});
-fogCanvas.addEventListener('mousedown', e => {
-  isDrawing = true;
-  const { x, y } = getPos(e);
-  drawOnFog(x, y);
-  pillDraw.classList.add('on');
-});
-fogCanvas.addEventListener('mouseup',    () => { isDrawing = false; pillDraw.classList.remove('on'); });
-fogCanvas.addEventListener('mouseleave', () => { isDrawing = false; pillDraw.classList.remove('on'); cursorX = -100; });
-
-fogCanvas.addEventListener('touchstart', e => {
-  e.preventDefault(); isDrawing = true;
-  const { x, y } = getPos(e);
-  cursorX = x; cursorY = y;
-  drawOnFog(x, y); pillDraw.classList.add('on');
-}, { passive: false });
-fogCanvas.addEventListener('touchmove', e => {
-  e.preventDefault();
-  const { x, y } = getPos(e);
-  cursorX = x; cursorY = y;
-  drawOnFog(x, y);
-}, { passive: false });
-fogCanvas.addEventListener('touchend', () => { isDrawing = false; pillDraw.classList.remove('on'); });
-
-// ══════════════════════════════════════════════════════
-//  MICROPHONE  →  BLOW MODE
-// ══════════════════════════════════════════════════════
-let lastBlow = 0;
-
-async function initMic() {
-  try {
-    const stream   = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-    const audioCtx = new AudioContext();
-    const source   = audioCtx.createMediaStreamSource(stream);
-    const analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 512;
-    source.connect(analyser);
-    const buf = new Uint8Array(analyser.frequencyBinCount);
-
-    statusEl.textContent = '✅ Mic ready — blow into mic to fog the mirror!';
-
-    setInterval(() => {
-      analyser.getByteFrequencyData(buf);
-
-      // Breath = broadband noise — check low + mid frequency average
-      const low = buf.slice(0, 30).reduce((s,v)=>s+v,0) / 30;
-      const mid = buf.slice(30,80).reduce((s,v)=>s+v,0) / 50;
-      const avg = (low * 0.6 + mid * 0.4);
-
-      const thresh = parseFloat(blowSensIn.value) * 2.2;
-      const now = Date.now();
-
-      if (avg > thresh && now - lastBlow > 300) {
-        lastBlow = now;
-        // Breath hits lower-center of mirror (like real glass)
-        const bx = W * 0.5 + (Math.random()-0.5) * 80;
-        const by = H * 0.62 + (Math.random()-0.5) * 50;
-        addFogBloom(bx, by, avg - thresh);
-        pillBlow.classList.add('on');
-        setTimeout(() => pillBlow.classList.remove('on'), 600);
-      }
-    }, 60);
-  } catch(e) {
-    statusEl.textContent = '⚠️ Mic not available — blow feature disabled';
-  }
+  scheduleRefog();
 }
 
 // ══════════════════════════════════════════════════════
-//  MEDIAPIPE HANDS  →  WIPE MODE
+//  🖐  WIPE — palm ellipse on movement
 // ══════════════════════════════════════════════════════
-const PALM_IDS = [0, 1, 5, 9, 13, 17];
-const TIPS     = [4, 8, 12, 16, 20];
+function wipePalm(cx, cy, rx, ry, angle) {
+  const cosA=Math.cos(-angle), sinA=Math.sin(-angle);
+  const pad=Math.max(rx,ry)+4;
+  const x0=Math.max(0,(cx-pad)|0), x1=Math.min(W-1,(cx+pad)|0);
+  const y0=Math.max(0,(cy-pad)|0), y1=Math.min(H-1,(cy+pad)|0);
+  for (let py=y0;py<=y1;py++) for (let px=x0;px<=x1;px++) {
+    const dx=px-cx, dy=py-cy;
+    const lx=dx*cosA-dy*sinA, ly=dx*sinA+dy*cosA;
+    const t=(lx/rx)*(lx/rx)+(ly/ry)*(ly/ry);
+    if (t>1) continue;
+    const str=(1-t)*(1-t);
+    const i=py*W+px, prev=fogAlpha[i];
+    fogAlpha[i]   = Math.max(0, prev - str*0.85);
+    smearAlpha[i] = Math.max(smearAlpha[i], str*prev*0.42);
+  }
+  scheduleRefog();
+}
+
+// ══════════════════════════════════════════════════════
+//  ✊  BLOW — fist adds fog bloom at hand position
+// ══════════════════════════════════════════════════════
+function addFogBloom(cx, cy) {
+  const str = parseFloat(blowStrIn.value);
+  const rx = 100 + str * 40, ry = 72 + str * 28;
+  const x0=Math.max(0,(cx-rx)|0), x1=Math.min(W-1,(cx+rx)|0);
+  const y0=Math.max(0,(cy-ry)|0), y1=Math.min(H-1,(cy+ry)|0);
+  for (let py=y0;py<=y1;py++) for (let px=x0;px<=x1;px++) {
+    const dx=(px-cx)/rx, dy=(py-cy)/ry;
+    const t=dx*dx+dy*dy; if (t>1) continue;
+    const amt=(1-t)*(1-t)*str*0.55;
+    const i=py*W+px;
+    fogAlpha[i] = Math.min(1.0, fogAlpha[i]+amt);
+  }
+  // Spawn condensation drops in bloom
+  const nDrops = 2 + (str*3|0);
+  for (let d=0;d<nDrops;d++) {
+    spawnDrop(cx+(Math.random()-0.5)*rx*1.1, cy-ry*0.2+(Math.random()-0.5)*ry*0.6, 1.5+Math.random()*3);
+  }
+  // Expanding ring visual
+  const ring = document.createElement('div');
+  ring.className = 'breath-ring';
+  ring.style.left = `${cx/W*100}%`;
+  ring.style.top  = `${cy/H*100}%`;
+  wrap.appendChild(ring);
+  setTimeout(()=>ring.remove(), 1400);
+}
+
+// ══════════════════════════════════════════════════════
+//  GESTURE CLASSIFIER
+//
+//  Checks each finger: tip.y < pip.y  →  finger extended
+//  Landmark pairs: (tip, pip)
+//    Index:  (8,  6)
+//    Middle: (12, 10)
+//    Ring:   (16, 14)
+//    Pinky:  (20, 18)
+//
+//  DRAW  = only index extended
+//  WIPE  = all 4 extended  (open palm)
+//  BLOW  = all 4 curled    (fist)
+// ══════════════════════════════════════════════════════
+function isExtended(lm, tip, pip) {
+  return lm[tip].y < lm[pip].y - 0.02; // small buffer to avoid jitter
+}
+
+function classifyGesture(lm) {
+  const idx = isExtended(lm, 8,  6);
+  const mid = isExtended(lm, 12, 10);
+  const rng = isExtended(lm, 16, 14);
+  const pnk = isExtended(lm, 20, 18);
+
+  if ( idx && !mid && !rng && !pnk) return 'DRAW';
+  if ( idx &&  mid &&  rng &&  pnk) return 'WIPE';
+  if (!idx && !mid && !rng && !pnk) return 'BLOW';
+  return 'NONE';
+}
+
+// ══════════════════════════════════════════════════════
+//  MEDIAPIPE STATE
+// ══════════════════════════════════════════════════════
+const PALM_IDS = [0,1,5,9,13,17];
+const TIPS     = [4,8,12,16,20];
 const BONES    = [
   [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
   [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
   [13,17],[0,17],[17,18],[18,19],[19,20]
 ];
-const MIN_VEL = 2.8;
-let prevPalm  = null;
+
+const MIN_WIPE_VEL  = 3.0;   // px/frame — palm must move to wipe
+const MIN_DRAW_VEL  = 0.5;   // px/frame — light threshold for drawing
+let   prevPalm      = null;
+let   prevFinger    = null;
+let   blowCooldown  = 0;
 
 function lmPt(lm, i) {
-  return { x: (1 - lm[i].x) * W, y: lm[i].y * H };
+  return { x: (1 - lm[i].x)*W, y: lm[i].y*H };
 }
 
-function onHandResults(res) {
-  handCtx.clearRect(0, 0, W, H);
-  if (!res.multiHandLandmarks?.length) {
-    pillHand.classList.remove('on');
-    prevPalm = null; return;
+// Gesture label update
+function setLabel(gesture) {
+  gestureLabel.className = '';
+  pillDraw.classList.remove('active-draw');
+  pillWipe.classList.remove('active-wipe');
+  pillBlow.classList.remove('active-blow');
+  if (gesture === 'DRAW') {
+    gestureLabel.textContent = '☝️ Drawing';
+    gestureLabel.className = 'show-draw';
+    pillDraw.classList.add('active-draw');
+  } else if (gesture === 'WIPE') {
+    gestureLabel.textContent = '🖐 Wiping';
+    gestureLabel.className = 'show-wipe';
+    pillWipe.classList.add('active-wipe');
+  } else if (gesture === 'BLOW') {
+    gestureLabel.textContent = '✊ Blowing fog';
+    gestureLabel.className = 'show-blow';
+    pillBlow.classList.add('active-blow');
   }
-  pillHand.classList.add('on');
+}
 
-  const lm      = res.multiHandLandmarks[0];
-  const palmPts = PALM_IDS.map(i => lmPt(lm, i));
-  const pcx     = palmPts.reduce((s,p)=>s+p.x,0) / palmPts.length;
-  const pcy     = palmPts.reduce((s,p)=>s+p.y,0) / palmPts.length;
-  const wrist   = lmPt(lm, 0), mid = lmPt(lm, 9);
-  const pLen    = Math.hypot(mid.x-wrist.x, mid.y-wrist.y);
-  const angle   = Math.atan2(mid.y-wrist.y, mid.x-wrist.x);
-  const rx = pLen * 0.76, ry = pLen * 0.54;
+// ── Draw fingertip cursor ──
+function drawFingertipCursor(x, y, gesture) {
+  uiCtx.clearRect(0, 0, W, H);
+  if (x < 0) return;
 
-  // Velocity gate
-  const vel = prevPalm ? Math.hypot(pcx-prevPalm.x, pcy-prevPalm.y) : 0;
-  if (vel > MIN_VEL || !prevPalm) {
-    wipePalm(pcx, pcy, rx, ry, angle);
-    if (prevPalm && vel > 5) {
-      const steps = Math.ceil(vel / (rx * 0.45));
-      for (let s = 1; s < steps; s++) {
-        wipePalm(
-          prevPalm.x + (pcx-prevPalm.x)*s/steps,
-          prevPalm.y + (pcy-prevPalm.y)*s/steps,
-          rx, ry, angle
-        );
-      }
-    }
+  if (gesture === 'DRAW') {
+    const r = parseInt(drawSzIn.value);
+    uiCtx.save();
+    // Glow
+    const g = uiCtx.createRadialGradient(x,y,0,x,y,r+8);
+    g.addColorStop(0,'rgba(255,200,120,0.35)');
+    g.addColorStop(1,'rgba(255,200,120,0)');
+    uiCtx.fillStyle=g; uiCtx.beginPath(); uiCtx.arc(x,y,r+8,0,Math.PI*2); uiCtx.fill();
+    // Ring
+    uiCtx.strokeStyle='rgba(255,210,140,0.9)'; uiCtx.lineWidth=1.5;
+    uiCtx.beginPath(); uiCtx.arc(x,y,r,0,Math.PI*2); uiCtx.stroke();
+    // Dot
+    uiCtx.fillStyle='rgba(255,230,180,0.95)';
+    uiCtx.beginPath(); uiCtx.arc(x,y,2.5,0,Math.PI*2); uiCtx.fill();
+    uiCtx.restore();
   }
-  prevPalm = { x: pcx, y: pcy };
+}
 
-  // Draw skeleton
+// ── Hand skeleton ──
+function drawSkeleton(lm, gesture) {
+  const colour = gesture==='DRAW' ? 'rgba(255,200,120,0.5)'
+               : gesture==='WIPE' ? 'rgba(100,195,255,0.45)'
+               : gesture==='BLOW' ? 'rgba(100,240,160,0.45)'
+               : 'rgba(120,160,200,0.3)';
+  const tipClr = gesture==='DRAW' ? 'rgba(255,220,160,0.95)'
+               : gesture==='WIPE' ? 'rgba(160,220,255,0.95)'
+               : gesture==='BLOW' ? 'rgba(160,255,200,0.95)'
+               : 'rgba(180,220,255,0.7)';
+
   handCtx.save();
-  handCtx.strokeStyle = 'rgba(110,195,255,0.38)';
-  handCtx.lineWidth   = 1.5; handCtx.lineCap = 'round';
-  BONES.forEach(([a,b]) => {
-    const pa = lmPt(lm,a), pb = lmPt(lm,b);
-    handCtx.beginPath();
-    handCtx.moveTo(pa.x,pa.y); handCtx.lineTo(pb.x,pb.y);
-    handCtx.stroke();
+  handCtx.strokeStyle=colour; handCtx.lineWidth=1.5; handCtx.lineCap='round';
+  BONES.forEach(([a,b])=>{
+    const pa=lmPt(lm,a), pb=lmPt(lm,b);
+    handCtx.beginPath(); handCtx.moveTo(pa.x,pa.y); handCtx.lineTo(pb.x,pb.y); handCtx.stroke();
   });
   for (let i=0;i<21;i++) {
-    const p = lmPt(lm,i), r = TIPS.includes(i) ? 5 : 2.5;
+    const p=lmPt(lm,i), r=TIPS.includes(i)?5:2.5;
     handCtx.beginPath(); handCtx.arc(p.x,p.y,r,0,Math.PI*2);
-    handCtx.fillStyle = TIPS.includes(i) ? 'rgba(210,240,255,0.95)' : 'rgba(90,170,255,0.7)';
+    handCtx.fillStyle = TIPS.includes(i) ? tipClr : colour.replace('0.45','0.7').replace('0.3','0.55');
     handCtx.fill();
   }
-  // Dashed palm ellipse
-  handCtx.save();
-  handCtx.translate(pcx,pcy); handCtx.rotate(angle);
-  handCtx.setLineDash([4,6]);
-  handCtx.strokeStyle = 'rgba(130,200,255,0.2)';
-  handCtx.lineWidth   = 1;
-  handCtx.beginPath(); handCtx.ellipse(0,0,rx,ry,0,0,Math.PI*2);
-  handCtx.stroke();
-  handCtx.restore();
   handCtx.restore();
 }
 
+// ══════════════════════════════════════════════════════
+//  MAIN HAND RESULT HANDLER
+// ══════════════════════════════════════════════════════
+function onHandResults(res) {
+  handCtx.clearRect(0, 0, W, H);
+  uiCtx.clearRect(0, 0, W, H);
+
+  if (!res.multiHandLandmarks?.length) {
+    setLabel('NONE'); prevPalm=null; prevFinger=null; return;
+  }
+
+  const lm      = res.multiHandLandmarks[0];
+  const gesture = classifyGesture(lm);
+  setLabel(gesture);
+  drawSkeleton(lm, gesture);
+
+  // ── Palm center (used for wipe + blow) ──
+  const palmPts = PALM_IDS.map(i=>lmPt(lm,i));
+  const pcx = palmPts.reduce((s,p)=>s+p.x,0)/palmPts.length;
+  const pcy = palmPts.reduce((s,p)=>s+p.y,0)/palmPts.length;
+
+  // ── Index fingertip (used for draw) ──
+  const tip = lmPt(lm, 8);
+
+  if (gesture === 'DRAW') {
+    // Show cursor at fingertip
+    drawFingertipCursor(tip.x, tip.y, 'DRAW');
+    // Draw if finger has moved
+    const vel = prevFinger ? Math.hypot(tip.x-prevFinger.x, tip.y-prevFinger.y) : 99;
+    if (vel > MIN_DRAW_VEL) {
+      drawOnFog(tip.x, tip.y);
+      // Fill path between frames
+      if (prevFinger && vel > 3) {
+        const steps = Math.ceil(vel / parseInt(drawSzIn.value) * 1.5);
+        for (let s=1;s<steps;s++) {
+          drawOnFog(
+            prevFinger.x + (tip.x-prevFinger.x)*s/steps,
+            prevFinger.y + (tip.y-prevFinger.y)*s/steps
+          );
+        }
+      }
+    }
+    prevFinger = { x:tip.x, y:tip.y };
+    prevPalm   = null;
+
+  } else if (gesture === 'WIPE') {
+    prevFinger = null;
+    // Palm ellipse wipe (only when moving)
+    const wrist  = lmPt(lm,0), mid = lmPt(lm,9);
+    const pLen   = Math.hypot(mid.x-wrist.x, mid.y-wrist.y);
+    const angle  = Math.atan2(mid.y-wrist.y, mid.x-wrist.x);
+    const rx=pLen*0.76, ry=pLen*0.54;
+
+    const vel = prevPalm ? Math.hypot(pcx-prevPalm.x, pcy-prevPalm.y) : 0;
+    if (vel > MIN_WIPE_VEL || !prevPalm) {
+      wipePalm(pcx, pcy, rx, ry, angle);
+      if (prevPalm && vel>5) {
+        const steps=Math.ceil(vel/(rx*0.45));
+        for (let s=1;s<steps;s++) {
+          wipePalm(prevPalm.x+(pcx-prevPalm.x)*s/steps, prevPalm.y+(pcy-prevPalm.y)*s/steps, rx,ry,angle);
+        }
+      }
+    }
+    // Palm ellipse outline
+    handCtx.save();
+    handCtx.translate(pcx,pcy); handCtx.rotate(angle);
+    handCtx.setLineDash([4,6]);
+    handCtx.strokeStyle='rgba(100,195,255,0.22)'; handCtx.lineWidth=1;
+    handCtx.beginPath(); handCtx.ellipse(0,0,rx,ry,0,0,Math.PI*2); handCtx.stroke();
+    handCtx.restore();
+    prevPalm = { x:pcx, y:pcy };
+
+  } else if (gesture === 'BLOW') {
+    prevFinger = null; prevPalm = null;
+    // Fist blows fog at palm position — throttled
+    blowCooldown--;
+    if (blowCooldown <= 0) {
+      addFogBloom(pcx, pcy);
+      blowCooldown = 12; // ~every 12 frames ≈ 0.4s at 30fps
+    }
+  } else {
+    prevFinger=null; prevPalm=null;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  START MEDIAPIPE
+// ══════════════════════════════════════════════════════
 function startMediaPipe() {
+  loaderMsg.textContent = 'Loading hand model…';
   const hands = new Hands({
-    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
+    locateFile: f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
   });
-  hands.setOptions({ maxNumHands:1, modelComplexity:1, minDetectionConfidence:0.72, minTrackingConfidence:0.60 });
+  hands.setOptions({ maxNumHands:1, modelComplexity:1, minDetectionConfidence:0.74, minTrackingConfidence:0.62 });
   hands.onResults(onHandResults);
 
   const cam = new Camera(video, {
-    onFrame: async () => { await hands.send({ image: video }); },
-    width: W, height: H
+    onFrame: async()=>{ await hands.send({ image:video }); },
+    width:W, height:H
   });
-  cam.start().then(() => {
-    setTimeout(() => { loader.classList.add('gone'); }, 1500);
+  cam.start().then(()=>{
+    setTimeout(()=>loader.classList.add('gone'), 1600);
+    statusEl.textContent='✅ Ready! Show your hand to the camera.';
     requestAnimationFrame(renderLoop);
-    // Start mic after camera is up
-    initMic();
-    statusEl.textContent = '✅ All systems ready!';
-  }).catch(err => { loaderMsg.textContent = '❌ ' + err.message; });
+  }).catch(err=>{ loaderMsg.textContent='❌ '+err.message; });
 }
 
 // ══════════════════════════════════════════════════════
 //  BUTTONS
 // ══════════════════════════════════════════════════════
-document.getElementById('clearBtn').addEventListener('click', () => {
+document.getElementById('clearBtn').addEventListener('click',()=>{
   fogAlpha.fill(1.0); smearAlpha.fill(0.0);
-  if (refogTimer) { clearInterval(refogTimer); refogTimer = null; }
+  if(refogTimer){clearInterval(refogTimer);refogTimer=null;}
 });
-document.getElementById('snapBtn').addEventListener('click', () => {
-  const m = document.createElement('canvas');
-  m.width = W; m.height = H;
-  const mc = m.getContext('2d');
+document.getElementById('snapBtn').addEventListener('click',()=>{
+  const m=document.createElement('canvas'); m.width=W; m.height=H;
+  const mc=m.getContext('2d');
   mc.drawImage(camCanvas,0,0); mc.drawImage(fogCanvas,0,0); mc.drawImage(handCanvas,0,0);
-  const a = document.createElement('a');
-  a.download = `foggy-${Date.now()}.png`; a.href = m.toDataURL(); a.click();
+  const a=document.createElement('a');
+  a.download=`foggy-${Date.now()}.png`; a.href=m.toDataURL(); a.click();
 });
 
 // ══════════════════════════════════════════════════════
 //  BOOT
 // ══════════════════════════════════════════════════════
-navigator.mediaDevices.getUserMedia({ video:{ width:W, height:H, facingMode:'user' }, audio:false })
-  .then(stream => {
-    video.srcObject = stream; video.play();
-    loaderMsg.textContent = 'Loading hand model…';
-    startMediaPipe();
-  })
-  .catch(err => { loaderMsg.textContent = '❌ Camera: ' + err.message; });
+navigator.mediaDevices.getUserMedia({ video:{width:W,height:H,facingMode:'user'}, audio:false })
+  .then(stream=>{ video.srcObject=stream; video.play(); startMediaPipe(); })
+  .catch(err=>{ loaderMsg.textContent='❌ Camera: '+err.message; });
 </script>
 </body>
 </html>
