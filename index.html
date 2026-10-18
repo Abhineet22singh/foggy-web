@@ -668,6 +668,8 @@
             <span>☝️ Index / Pointer: Draw</span>
             <span>•</span>
             <span>🖐 Open Palm: Wipe Surface</span>
+            <span>•</span>
+            <span>🌬️ Blow Mist (B / M)</span>
           </div>
         </div>
       </div>
@@ -767,9 +769,15 @@
           </button>
 
           <!-- Re-fog All -->
-          <button class="btn-studio" id="btnRefogAll" title="Restore complete condensation">
+          <button class="btn-studio" id="btnRefogAll" title="Restore complete condensation (R)">
             <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
             Re-fog All
+          </button>
+
+          <!-- Blow Mist / Warm Breath -->
+          <button class="btn-studio" id="btnBlowMist" title="Breathe warm steam onto the glass (B or M)">
+            <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
+            Blow Mist
           </button>
 
           <!-- Mirror Moments Modal Trigger -->
@@ -939,6 +947,7 @@
   const btnUndo           = document.getElementById('btnUndo');
   const btnClear          = document.getElementById('btnClear');
   const btnRefogAll       = document.getElementById('btnRefogAll');
+  const btnBlowMist       = document.getElementById('btnBlowMist');
   const btnOpenMoments    = document.getElementById('btnOpenMoments');
   const btnOpenLab        = document.getElementById('btnOpenLab');
   const btnToggleDroplets = document.getElementById('btnToggleDroplets');
@@ -1080,6 +1089,33 @@
     } catch(e){}
   }
 
+  // Realistic warm breath / steam sound synthesis
+  function playBreathSound() {
+    if (!audioCtx) initAmbientAudio();
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const dur = 1.6;
+      const buf = audioCtx.createBuffer(1, (audioCtx.sampleRate * dur) | 0, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        const t = i / audioCtx.sampleRate;
+        const env = Math.sin((t / dur) * Math.PI);
+        data[i] = (Math.random() * 2 - 1) * env * 0.085;
+      }
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const bFilter = audioCtx.createBiquadFilter();
+      bFilter.type = 'bandpass';
+      bFilter.frequency.setValueAtTime(420, audioCtx.currentTime);
+      bFilter.frequency.exponentialRampToValueAtTime(260, audioCtx.currentTime + dur);
+      bFilter.Q.value = 1.4;
+      src.connect(bFilter);
+      bFilter.connect(audioCtx.destination);
+      src.start();
+    } catch(e){}
+  }
+
   // ══════════════════════════════════════════════════════
   //  TOAST ALERTS
   // ══════════════════════════════════════════════════════
@@ -1092,10 +1128,64 @@
   }
 
   // ══════════════════════════════════════════════════════
-  //  FOG STATE, NOISE & UNDO BUFFER
+  //  C2-CONTINUOUS QUINTIC PERLIN NOISE GENERATOR
+  //  Guarantees zero checkerboards, zero blockiness, and smooth organic gradients
   // ══════════════════════════════════════════════════════
-  const fogAlpha   = new Float32Array(W * H).fill(1.0);
-  const smearAlpha = new Float32Array(W * H).fill(0.0);
+  function createPerlinNoise2D(seed = 1337) {
+    const p = new Uint8Array(512);
+    const perm = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) perm[i] = i;
+    let s = seed >>> 0;
+    for (let i = 255; i > 0; i--) {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      const j = s % (i + 1);
+      const tmp = perm[i]; perm[i] = perm[j]; perm[j] = tmp;
+    }
+    for (let i = 0; i < 512; i++) p[i] = perm[i & 255];
+
+    function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); } // 6t^5 - 15t^4 + 10t^3
+    function lerp(a, b, t) { return a + t * (b - a); }
+    function grad(hash, x, y) {
+      const h = hash & 7;
+      const u = h < 4 ? x : y;
+      const v = h < 4 ? y : x;
+      return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+    }
+
+    return function(x, y) {
+      const X = Math.floor(x) & 255;
+      const Y = Math.floor(y) & 255;
+      const xf = x - Math.floor(x);
+      const yf = y - Math.floor(y);
+      const u = fade(xf);
+      const v = fade(yf);
+      const A = p[X] + Y, B = p[X + 1] + Y;
+      return lerp(
+        lerp(grad(p[A], xf, yf), grad(p[B], xf - 1, yf), u),
+        lerp(grad(p[A + 1], xf, yf - 1), grad(p[B + 1], xf - 1, yf - 1), u),
+        v
+      );
+    };
+  }
+
+  const noise2D = createPerlinNoise2D(4291);
+  const seedNoise2D = createPerlinNoise2D(9831);
+
+  // ══════════════════════════════════════════════════════
+  //  FOG STATE, MENISCUS ACCUMULATION & UNDO BUFFER
+  // ══════════════════════════════════════════════════════
+  const fogAlpha       = new Float32Array(W * H).fill(1.0);
+  const meniscusBuffer = new Float32Array(W * H).fill(0.0);
+
+  // Precomputed organic nucleation map (seeds irregular mist expansion when restoring)
+  const nucleationMap  = new Float32Array(W * H);
+  for (let py = 0; py < H; py++) {
+    for (let px = 0; px < W; px++) {
+      const n1 = seedNoise2D(px * 0.015, py * 0.015);
+      const n2 = noise2D(px * 0.045, py * 0.045);
+      nucleationMap[py * W + px] = Math.min(1.0, Math.max(0.15, 0.5 + 0.35 * n1 + 0.15 * n2));
+    }
+  }
 
   // Bounded Undo History Stack
   const MAX_UNDO_LEVELS = 8;
@@ -1111,31 +1201,20 @@
     if (undoStack.length === 0) return;
     const previous = undoStack.pop();
     fogAlpha.set(previous);
-    smearAlpha.fill(0.0);
+    meniscusBuffer.fill(0.0);
     btnUndo.disabled = (undoStack.length === 0);
     showToastNotification("Undid previous action");
   }
 
-  // Precomputed Multi-Frequency Steam Noise
-  const NGRID = new Float32Array(256 * 256);
-  for (let i = 0; i < NGRID.length; i++) NGRID[i] = Math.random();
-
-  let noiseTime = 0;
-  function sampleFractalSteam(px, py) {
-    const i1 = (((px * 0.11 + noiseTime * 0.08) | 0) & 255) + ((((py * 0.11) | 0) & 255) << 8);
-    const i2 = (((px * 0.26) | 0) & 255) + ((((py * 0.26 + noiseTime * 0.04) | 0) & 255) << 8);
-    return NGRID[i1] * 0.72 + NGRID[i2] * 0.28;
-  }
-
-  // Dynamic Condensation Droplets
+  // Dynamic Condensation Droplets (Water runs & gravity beads)
   let maxDroplets = 24;
   const drops = [];
   function createDroplet(x, y, sz) {
     drops.push({
-      x: x ?? (16 + Math.random() * (W - 32)),
+      x: x ?? (20 + Math.random() * (W - 40)),
       y: y ?? (Math.random() * H * 0.35),
-      r: sz ?? (2.2 + Math.random() * 3.6),
-      vy: 0.22 + Math.random() * 0.45,
+      r: sz ?? (2.4 + Math.random() * 3.4),
+      vy: 0.18 + Math.random() * 0.40,
       wobble: Math.random() * Math.PI * 2,
       trail: []
     });
@@ -1143,33 +1222,148 @@
   for (let i = 0; i < maxDroplets; i++) createDroplet();
 
   // ══════════════════════════════════════════════════════
-  //  NATURAL DRAWING & WIPING BRUSH ALGORITHM
+  //  PRECOMPUTED MULTI-SCALE CONDENSATION TEXTURES
+  //  Layer 2: Macro condensation clouds
+  //  Layer 3: Meso moisture ripples & swirls
+  //  Layer 4: Dense micro-droplet field with specular highlights
+  // ══════════════════════════════════════════════════════
+  const condensationBaseCanvas = document.createElement('canvas');
+  condensationBaseCanvas.width = W; condensationBaseCanvas.height = H;
+  const condBaseCtx = condensationBaseCanvas.getContext('2d');
+
+  const microDropletsCanvas = document.createElement('canvas');
+  microDropletsCanvas.width = W; microDropletsCanvas.height = H;
+  const microCtx = microDropletsCanvas.getContext('2d');
+
+  const dynamicFogMaskCanvas = document.createElement('canvas');
+  dynamicFogMaskCanvas.width = W; dynamicFogMaskCanvas.height = H;
+  const dynamicFogMaskCtx = dynamicFogMaskCanvas.getContext('2d');
+  const maskImageData = dynamicFogMaskCtx.createImageData(W, H);
+  const maskData = maskImageData.data;
+  // Initialize dynamic mask
+  for (let i = 0; i < W * H; i++) {
+    maskData[i * 4]     = 255;
+    maskData[i * 4 + 1] = 255;
+    maskData[i * 4 + 2] = 255;
+    maskData[i * 4 + 3] = 255;
+  }
+
+  function precomputeCondensationTextures() {
+    // 1. MACRO & MESO CLOUD CONDENSATION BASE
+    const img = condBaseCtx.createImageData(W, H);
+    const d = img.data;
+
+    let baseR = 196, baseG = 208, baseB = 222; // Cool neutral mist-grey
+    if (activeTheme === 'sunset') {
+      baseR = 218; baseG = 192; baseB = 198;
+    } else if (activeTheme === 'studio') {
+      baseR = 182; baseG = 194; baseB = 208;
+    }
+
+    for (let py = 0; py < H; py++) {
+      for (let px = 0; px < W; px++) {
+        const i = py * W + px;
+
+        // Multi-frequency smooth octaves
+        const macro = noise2D(px * 0.0048, py * 0.0048);           // ~200px wavelength
+        const meso  = noise2D(px * 0.021 + 12.4, py * 0.021 + 8.1); // ~48px wavelength
+        const micro = noise2D(px * 0.075 + 44.1, py * 0.075 + 31.7);// ~13px wavelength
+
+        // Cooler glass frame perimeter edge condensation accumulation
+        const distEdgeX = Math.min(px, W - px) / W;
+        const distEdgeY = Math.min(py, H - py) / H;
+        const edgeDist = Math.min(distEdgeX, distEdgeY);
+        const edgeMoisture = Math.max(0, 0.18 * (1.0 - Math.min(1.0, edgeDist * 4.5)));
+
+        // Natural moisture density variation across the window
+        const moisture = 0.52 + 0.28 * macro + 0.14 * meso + 0.06 * micro + edgeMoisture;
+        const densityClamped = Math.max(0.25, Math.min(0.92, moisture));
+
+        // Soft, atmospheric cool-mist tint with subtle tonal variation
+        const lum = (macro * 14) | 0;
+        d[i * 4]     = Math.min(255, Math.max(0, baseR + lum));
+        d[i * 4 + 1] = Math.min(255, Math.max(0, baseG + lum));
+        d[i * 4 + 2] = Math.min(255, Math.max(0, baseB + lum));
+        // Realistic translucent mist veil: 0.42 to 0.72 alpha
+        d[i * 4 + 3] = Math.round(densityClamped * 160);
+      }
+    }
+    condBaseCtx.putImageData(img, 0, 0);
+
+    // 2. MICRO-DROPLET FIELD (Thousands of glistening condensation beads)
+    microCtx.clearRect(0, 0, W, H);
+    const dropCount = 4200;
+    let rng = 54321;
+    function rand() {
+      rng = (rng * 1103515245 + 12345) & 0x7fffffff;
+      return rng / 0x7fffffff;
+    }
+
+    for (let k = 0; k < dropCount; k++) {
+      const bx = rand() * W;
+      const by = rand() * H;
+
+      // Group micro-droplets organically according to moisture density
+      const localMoist = 0.5 + 0.4 * noise2D(bx * 0.005, by * 0.005);
+      if (rand() > localMoist * 1.1) continue;
+
+      const br = 0.7 + Math.pow(rand(), 2.8) * 2.5; // Majority ~1px, occasional 2.8px beads
+
+      // Shadow rim (ambient occlusion where bead touches glass)
+      microCtx.fillStyle = 'rgba(28, 38, 52, 0.22)';
+      microCtx.beginPath();
+      microCtx.arc(bx + br * 0.2, by + br * 0.25, br * 0.95, 0, Math.PI * 2);
+      microCtx.fill();
+
+      // Translucent bead body
+      microCtx.fillStyle = 'rgba(215, 230, 245, 0.38)';
+      microCtx.beginPath();
+      microCtx.arc(bx, by, br, 0, Math.PI * 2);
+      microCtx.fill();
+
+      // Specular pinprick catchlight (specular highlight of ambient lighting)
+      microCtx.fillStyle = 'rgba(255, 255, 255, 0.82)';
+      microCtx.beginPath();
+      microCtx.arc(bx - br * 0.32, by - br * 0.32, Math.max(0.4, br * 0.35), 0, Math.PI * 2);
+      microCtx.fill();
+    }
+  }
+  precomputeCondensationTextures();
+
+  // ══════════════════════════════════════════════════════
+  //  NATURAL DRAWING & WIPING (with Meniscus Edge Ridge)
   // ══════════════════════════════════════════════════════
   function applyBrush(cx, cy, radius, softness, isWipe = false) {
+    const outerR = radius * 1.18;
     const r2 = radius * radius;
-    const x0 = Math.max(0, (cx - radius) | 0);
-    const x1 = Math.min(W - 1, (cx + radius) | 0);
-    const y0 = Math.max(0, (cy - radius) | 0);
-    const y1 = Math.min(H - 1, (cy + radius) | 0);
-    const exp = 1.0 + (1.0 - softness) * 3.0;
+    const outerR2 = outerR * outerR;
+    const x0 = Math.max(0, (cx - outerR) | 0);
+    const x1 = Math.min(W - 1, (cx + outerR) | 0);
+    const y0 = Math.max(0, (cy - outerR) | 0);
+    const y1 = Math.min(H - 1, (cy + outerR) | 0);
+    const exp = 1.0 + (1.0 - softness) * 2.8;
 
     for (let py = y0; py <= y1; py++) {
       for (let px = x0; px <= x1; px++) {
         const dx = px - cx, dy = py - cy;
         const d2 = dx * dx + dy * dy;
-        if (d2 > r2) continue;
-
-        const normDist = Math.sqrt(d2) / radius;
-        const strokeFalloff = Math.pow(Math.max(0, 1.0 - normDist), exp);
         const idx = py * W + px;
-        const prev = fogAlpha[idx];
 
-        if (isWipe) {
-          fogAlpha[idx]   = Math.max(0, prev - strokeFalloff * 0.92);
-          smearAlpha[idx] = Math.max(smearAlpha[idx], strokeFalloff * prev * 0.45);
-        } else {
-          fogAlpha[idx]   = Math.max(0, prev - strokeFalloff * 0.98);
-          smearAlpha[idx] = Math.max(smearAlpha[idx], strokeFalloff * prev * 0.30);
+        if (d2 <= r2) {
+          // Inside stroke: clear condensation naturally to reveal sharp reflection
+          const normDist = Math.sqrt(d2) / radius;
+          const strokeFalloff = Math.pow(Math.max(0, 1.0 - normDist), exp);
+          const prev = fogAlpha[idx];
+          const clearAmt = isWipe ? 0.94 : 0.98;
+          fogAlpha[idx] = Math.max(0, prev - strokeFalloff * clearAmt);
+          // Dissolve meniscus in cleared center
+          meniscusBuffer[idx] = Math.max(0, meniscusBuffer[idx] - strokeFalloff * 0.8);
+        } else if (d2 <= outerR2) {
+          // Contact angle meniscus ridge: pushed water accumulates along stroke border
+          const dist = Math.sqrt(d2);
+          const t = (dist - radius) / (outerR - radius); // 0 at stroke edge, 1 at outer boundary
+          const ridge = Math.sin(t * Math.PI) * 0.28;
+          meniscusBuffer[idx] = Math.min(0.5, meniscusBuffer[idx] + ridge * (isWipe ? 0.18 : 0.32));
         }
       }
     }
@@ -1177,7 +1371,7 @@
 
   function interpolateStroke(p1, p2, radius, softness, isWipe) {
     const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-    const step = Math.max(2, radius * 0.32);
+    const step = Math.max(2, radius * 0.30);
     const count = Math.ceil(dist / step);
     for (let i = 0; i <= count; i++) {
       const t = count > 0 ? (i / count) : 0;
@@ -1188,9 +1382,9 @@
   }
 
   // ══════════════════════════════════════════════════════
-  //  DYNAMIC TIME-BASED RE-FOGGING ENGINE
+  //  ORGANIC FOG RESTORATION & NUCLEATION
   // ══════════════════════════════════════════════════════
-  const refogSpeedMultipliers = [0.0, 0.0008, 0.0022, 0.0055];
+  const refogSpeedMultipliers = [0.0, 0.0006, 0.0018, 0.0048];
   const refogSpeedLabels      = ['Paused (0x)', 'Slow (0.5x)', 'Normal (1.0x)', 'Fast (2.5x)'];
 
   function updateRefogging(deltaMs) {
@@ -1198,12 +1392,75 @@
     const rate = refogSpeedMultipliers[speedIndex];
     if (rate <= 0) return;
 
-    const factor = (deltaMs / 16.6) * rate;
+    const baseGrowth = (deltaMs / 16.6) * rate;
     for (let i = 0; i < fogAlpha.length; i++) {
       if (fogAlpha[i] < 1.0) {
-        fogAlpha[i]   = Math.min(1.0, fogAlpha[i] + factor);
-        smearAlpha[i] = Math.max(0, smearAlpha[i] - factor * 0.4);
+        // Nucleation growth: mist blossoms faster where nucleation affinity is high
+        const affinity = nucleationMap[i];
+        const step = baseGrowth * (0.65 + affinity * 0.70);
+        fogAlpha[i] = Math.min(1.0, fogAlpha[i] + step);
+        if (meniscusBuffer[i] > 0) meniscusBuffer[i] = Math.max(0, meniscusBuffer[i] - step * 0.5);
       }
+    }
+  }
+
+  // Organic Breath on Glass / Steam Wave Animation
+  let breathAnim = null;
+  function triggerWarmBreathSteam() {
+    playBreathSound();
+    activeBanner.textContent = '🌬️ Warm Breath on Glass';
+    activeBanner.className = 'visible style-wipe';
+    setTimeout(() => activeBanner.classList.remove('visible'), 2200);
+    showToastNotification("Warm breath condensates across the mirror");
+
+    const startTime = performance.now();
+    const duration = 1600; // 1.6s organic blooming wave
+
+    function stepBreath(now) {
+      const progress = Math.min(1.0, (now - startTime) / duration);
+      // Expanding organic wave from center-bottom
+      const cx = W * 0.5, cy = H * 0.65;
+      const maxRadius = Math.hypot(W, H) * 0.95;
+      const currentRadius = progress * maxRadius;
+
+      for (let py = 0; py < H; py++) {
+        for (let px = 0; px < W; px++) {
+          const idx = py * W + px;
+          if (fogAlpha[idx] >= 1.0) continue;
+
+          const dx = px - cx, dy = py - cy;
+          const dist = Math.hypot(dx, dy);
+          const nVal = nucleationMap[idx];
+          const distMod = dist + (nVal - 0.5) * 80;
+
+          if (distMod <= currentRadius) {
+            const waveStrength = Math.min(1.0, (currentRadius - distMod) / 70);
+            fogAlpha[idx] = Math.min(1.0, fogAlpha[idx] + waveStrength * 0.08);
+            meniscusBuffer[idx] = Math.max(0, meniscusBuffer[idx] - 0.05);
+          }
+        }
+      }
+
+      if (progress < 1.0) {
+        breathAnim = requestAnimationFrame(stepBreath);
+      } else {
+        fogAlpha.fill(1.0);
+        meniscusBuffer.fill(0.0);
+      }
+    }
+
+    if (breathAnim) cancelAnimationFrame(breathAnim);
+    breathAnim = requestAnimationFrame(stepBreath);
+  }
+
+  function restoreCondensationOrganic(immediate = false) {
+    recordUndoSnapshot();
+    if (immediate) {
+      fogAlpha.fill(1.0);
+      meniscusBuffer.fill(0.0);
+      showToastNotification("Condensation fully restored across mirror");
+    } else {
+      triggerWarmBreathSteam();
     }
   }
 
@@ -1256,6 +1513,9 @@
     studioRefCtx.beginPath();
     studioRefCtx.arc(W * 0.5, H * 0.95, 140, Math.PI, 0);
     studioRefCtx.fill();
+
+    // Recompute base condensation textures to match theme tone
+    precomputeCondensationTextures();
   }
   renderAtmosphericTheme();
 
@@ -1269,7 +1529,6 @@
   function renderLoop(currentTimestamp) {
     const deltaMs = Math.min(100, currentTimestamp - lastTimestamp);
     lastTimestamp = currentTimestamp;
-    noiseTime += 0.0035;
 
     // Monitor FPS
     frameCount++;
@@ -1290,12 +1549,12 @@
     if (isCameraActive && videoElem.readyState >= 2) {
       camCtx.translate(W, 0); camCtx.scale(-1, 1);
       if (opticalBlurPx > 0) {
-        camCtx.filter = `blur(${opticalBlurPx}px) brightness(1.08) saturate(0.82)`;
+        camCtx.filter = `blur(${opticalBlurPx}px) brightness(1.06) saturate(0.85)`;
       }
       camCtx.drawImage(videoElem, 0, 0, W, H);
     } else {
       if (opticalBlurPx > 0) {
-        camCtx.filter = `blur(${opticalBlurPx}px) brightness(1.05)`;
+        camCtx.filter = `blur(${opticalBlurPx}px) brightness(1.04)`;
       }
       camCtx.drawImage(studioReflectionCanvas, 0, 0, W, H);
     }
@@ -1321,7 +1580,7 @@
     const md = maskImg.data;
     for (let i = 0; i < W * H; i++) {
       const clearVal = 1.0 - fogAlpha[i];
-      md[i * 4 + 3] = Math.round(Math.min(1.0, clearVal * 1.5) * 255);
+      md[i * 4 + 3] = Math.round(Math.min(1.0, clearVal * 1.6) * 255);
     }
     maskCtx.putImageData(maskImg, 0, 0);
 
@@ -1332,51 +1591,37 @@
     camCtx.drawImage(sharpCanvas, 0, 0);
 
     // ──────────────────────────────────────────────────
-    // PASS 3: REALISTIC CONDENSATION MIST & FROST LAYER
+    // PASS 3: REALISTIC CONDENSATION MIST & MICRO-DROPLETS
     // ──────────────────────────────────────────────────
-    const density = parseFloat(sliderFogDensity.value);
-    const img = fogCtx.createImageData(W, H);
-    const d = img.data;
+    const userDensity = parseFloat(sliderFogDensity.value);
 
-    for (let py = 0; py < H; py++) {
-      for (let px = 0; px < W; px++) {
-        const i = py * W + px;
-        const a = fogAlpha[i];
-        if (a < 0.003) { d[i * 4 + 3] = 0; continue; }
-
-        const n = sampleFractalSteam(px, py);
-
-        let r = 226 + (n * 18 | 0);
-        let g = 234 + (n * 14 | 0);
-        let bv = 244 + (n * 8 | 0);
-
-        if (activeTheme === 'sunset') {
-          r = 240 + (n * 12 | 0);
-          g = 220 + (n * 10 | 0);
-          bv = 228 + (n * 8 | 0);
-        }
-
-        let fa = Math.min(1.0, a * density * (0.94 + n * 0.08));
-
-        const sm = smearAlpha[i];
-        if (sm > 0.02 && fa > 0.02) {
-          fa = Math.max(fa * 0.015, sm * 0.40);
-        }
-
-        d[i * 4]     = r;
-        d[i * 4 + 1] = g;
-        d[i * 4 + 2] = bv;
-        d[i * 4 + 3] = Math.round(fa * 255);
-      }
+    // Update dynamic fog mask buffer with fogAlpha + meniscus
+    for (let i = 0; i < W * H; i++) {
+      const a = Math.min(1.0, fogAlpha[i] + meniscusBuffer[i]);
+      maskData[i * 4 + 3] = (a * userDensity * 255) | 0;
     }
-    fogCtx.putImageData(img, 0, 0);
+    dynamicFogMaskCtx.putImageData(maskImageData, 0, 0);
+
+    // Composite condensation textures over glass
+    fogCtx.clearRect(0, 0, W, H);
+
+    // Layer 2 & 3: Multi-Scale Condensation Clouds & Swirls
+    fogCtx.drawImage(condensationBaseCanvas, 0, 0);
+
+    // Layer 4: Fine micro-droplet spray
+    fogCtx.drawImage(microDropletsCanvas, 0, 0);
+
+    // Mask with user etched/wiped fogAlpha
+    fogCtx.globalCompositeOperation = 'destination-in';
+    fogCtx.drawImage(dynamicFogMaskCanvas, 0, 0);
+    fogCtx.globalCompositeOperation = 'source-over';
 
     // ──────────────────────────────────────────────────
-    // PASS 4: SPECULAR GLASS SHEEN & AMBIENT MOISTURE
+    // PASS 4: STROKE BOUNDARY MENISCUS HIGHLIGHTS & SHEEN
     // ──────────────────────────────────────────────────
-    const sheen = fogCtx.createLinearGradient(0, 0, W * 0.65, H * 0.65);
-    sheen.addColorStop(0,    'rgba(255, 255, 255, 0.08)');
-    sheen.addColorStop(0.35, 'rgba(215, 235, 255, 0.025)');
+    const sheen = fogCtx.createLinearGradient(0, 0, W * 0.7, H * 0.7);
+    sheen.addColorStop(0,    'rgba(255, 255, 255, 0.06)');
+    sheen.addColorStop(0.4,  'rgba(215, 235, 255, 0.02)');
     sheen.addColorStop(1,    'rgba(255, 255, 255, 0.00)');
     fogCtx.fillStyle = sheen;
     fogCtx.fillRect(0, 0, W, H);
@@ -1392,58 +1637,61 @@
   }
 
   function renderWaterDroplets() {
-    if (drops.length < maxDroplets && Math.random() < 0.02) createDroplet();
+    if (drops.length < maxDroplets && Math.random() < 0.025) createDroplet();
 
     for (let i = drops.length - 1; i >= 0; i--) {
       const dr = drops[i];
       dr.trail.push({ x: dr.x, y: dr.y });
-      if (dr.trail.length > 24) dr.trail.shift();
+      if (dr.trail.length > 28) dr.trail.shift();
 
       dr.wobble += 0.08;
       dr.y += dr.vy;
-      dr.vy += 0.012;
-      dr.x += Math.sin(dr.wobble) * 0.32;
+      dr.vy += 0.014;
+      dr.x += Math.sin(dr.wobble) * 0.35;
 
       const cx = dr.x | 0, cy = dr.y | 0;
       const fi = Math.min(W * H - 1, Math.max(0, cy * W + cx));
-      if (fogAlpha[fi] > 0.12) {
-        const trR = (dr.r * 0.72) | 0;
+      if (fogAlpha[fi] > 0.10) {
+        // Water droplet sweeps away condensation in its path
+        const trR = (dr.r * 0.75) | 0;
         for (let dy = -trR; dy <= trR; dy++) {
           for (let dx = -trR; dx <= trR; dx++) {
             const pxi = cx + dx, pyi = cy + dy;
             if (pxi >= 0 && pxi < W && pyi >= 0 && pyi < H) {
               const pi = pyi * W + pxi;
-              fogAlpha[pi] = Math.max(0.02, fogAlpha[pi] - 0.10);
+              fogAlpha[pi] = Math.max(0.02, fogAlpha[pi] - 0.12);
             }
           }
         }
       }
 
-      if (dr.y > H + 14 || (fogAlpha[fi] < 0.05 && dr.y > 60)) {
+      if (dr.y > H + 16 || (fogAlpha[fi] < 0.04 && dr.y > 60)) {
         drops.splice(i, 1);
         continue;
       }
 
+      // Trickle trail behind the droplet
       if (dr.trail.length > 2) {
         fogCtx.beginPath();
-        fogCtx.strokeStyle = 'rgba(185, 225, 255, 0.38)';
-        fogCtx.lineWidth = dr.r * 0.78;
+        fogCtx.strokeStyle = 'rgba(180, 220, 250, 0.32)';
+        fogCtx.lineWidth = dr.r * 0.70;
         fogCtx.lineCap = 'round';
         fogCtx.moveTo(dr.trail[0].x, dr.trail[0].y);
         dr.trail.forEach(p => fogCtx.lineTo(p.x, p.y));
         fogCtx.stroke();
       }
 
+      // Glistening bead head with teardrop lighting
       const g = fogCtx.createRadialGradient(
-        dr.x - dr.r * 0.32, dr.y - dr.r * 0.36, 0,
+        dr.x - dr.r * 0.32, dr.y - dr.r * 0.35, 0,
         dr.x, dr.y, dr.r
       );
-      g.addColorStop(0,    'rgba(255, 255, 255, 0.98)');
-      g.addColorStop(0.38, 'rgba(215, 240, 255, 0.78)');
-      g.addColorStop(0.85, 'rgba(135, 190, 235, 0.28)');
-      g.addColorStop(1,    'rgba(90, 155, 210, 0.02)');
+      g.addColorStop(0,    'rgba(255, 255, 255, 0.95)');
+      g.addColorStop(0.35, 'rgba(210, 235, 255, 0.75)');
+      g.addColorStop(0.80, 'rgba(125, 175, 225, 0.25)');
+      g.addColorStop(1,    'rgba(60, 120, 180, 0.02)');
       fogCtx.beginPath();
-      fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI * 2);
+      fogCtx.ellipse(dr.x, dr.y, dr.r * 0.9, dr.r * 1.15, 0, 0, Math.PI * 2);
       fogCtx.fillStyle = g;
       fogCtx.fill();
     }
@@ -1837,24 +2085,37 @@
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
       e.preventDefault();
       performUndo();
-    }
-    if (e.key.toLowerCase() === 'f') {
+    } else if (e.key.toLowerCase() === 'f') {
       toggleFullscreen();
+    } else if (e.key.toLowerCase() === 'b' || e.key.toLowerCase() === 'm') {
+      triggerWarmBreathSteam();
+    } else if (e.key.toLowerCase() === 'r') {
+      restoreCondensationOrganic(false);
+    } else if (e.key.toLowerCase() === 'c') {
+      btnClear.click();
+    } else if (e.key.toLowerCase() === 'd') {
+      tabDraw.click();
+    } else if (e.key.toLowerCase() === 'w') {
+      tabWipe.click();
+    } else if (e.key === 'Escape') {
+      modalMoments.classList.remove('open');
+      modalLab.classList.remove('open');
     }
   });
 
   btnClear.addEventListener('click', () => {
     recordUndoSnapshot();
     fogAlpha.fill(0.0);
-    smearAlpha.fill(0.0);
+    meniscusBuffer.fill(0.0);
     showToastNotification("Mirror surface cleared completely");
   });
 
   btnRefogAll.addEventListener('click', () => {
-    recordUndoSnapshot();
-    fogAlpha.fill(1.0);
-    smearAlpha.fill(0.0);
-    showToastNotification("Condensation fully restored across mirror");
+    restoreCondensationOrganic(false);
+  });
+
+  btnBlowMist.addEventListener('click', () => {
+    triggerWarmBreathSteam();
   });
 
   btnToggleDroplets.addEventListener('click', () => {

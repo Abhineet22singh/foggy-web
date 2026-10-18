@@ -1,8 +1,8 @@
-# 🪟 FOGGY MIRROR — Ultimate Tournament Edition
+# 🪟 FOGGY MIRROR — Photorealistic Window Condensation Edition
 
-> **A photorealistic, camera-driven interactive foggy mirror powered by computer vision, procedural optical physics, and hardware-accelerated canvas compositing.**
+> **A photorealistic, camera-driven interactive foggy mirror and steamy window simulation powered by computer vision, 5-layer optical physics, procedural Perlin noise, and hardware-accelerated canvas compositing.**
 
-Experience the authentic sensation of drawing on a steamed-up bathroom mirror or rainy car window. Built for hackathons and creative technology showcases, **FOGGY MIRROR — Ultimate Tournament Edition** combines real-time 21-point hand tracking with physical light-scattering simulation, dynamic gravity-driven water droplets, procedural audio synthesis, and an interactive preset engine.
+Experience the authentic sensation of drawing on a steamed-up bathroom mirror or rainy car window. Built for creative technology showcases, hackathons, and tournament competitions, **FOGGY MIRROR** replaces flat white overlays and digital artifacts with a multi-layered, physically inspired condensation simulation featuring microscopic specular water beads, organic cloud variations, meniscus stroke ridges, and warm steam breath restoration.
 
 ---
 
@@ -12,21 +12,31 @@ Experience the authentic sensation of drawing on a steamed-up bathroom mirror or
 
 ---
 
-## 🏆 Key Tournament Edition Innovations
+## 🔬 Photorealistic 5-Layer Condensation Architecture
 
-| Feature | Category | Description |
+| Layer | Physical Component | Rendering Technique |
 |---|---|---|
-| 🔬 **Optical Light-Scattering Engine** | *Graphics Physics* | Real physics-based multi-scale condensation: pristine glass has a 16px Gaussian light-scattering blur, while wiped/etched regions reveal a razor-sharp, high-contrast mirror reflection underneath via destination-in alpha masks. |
-| ☝️ **Dual-Mode Gesture Tracking** | *Computer Vision* | MediaPipe Hands integration detecting 21 3D landmarks in real time. Point with an index finger (`☝️`) to etch crisp lines; open your palm (`🖐`) to wipe away mist across a broad radius. |
-| 🎨 **Mirror Moments Presets** | *Interactive Stencils* | Instant parametric condensation etchings: **Heart**, **Star**, **Smile**, and **Sun** etched with realistic edge feathered strokes. |
-| 🧪 **Fog Lab Sandbox** | *Real-Time Shaders* | Customizer modal offering dynamic ambient lighting environments (**Bathroom Warmth**, **Obsidian Studio**, **Sunset Glow**), real-time blur radius tuning (4px–32px), and droplet density controls. |
-| 🎬 **Demonstration Mode (Judge Tour)** | *Hackathon Showcase* | 6-stage automated showcase sequence with an on-screen HUD badge demonstrating Draw, Palm Wipe, Stencils, and Optical scattering without manual intervention. |
-| 💧 **Physics-Based Water Droplets** | *Simulation* | Glistening water beads with realistic specular highlights that accelerate under gravity down the glass pane, leaving clear trickle trails. |
-| ⏳ **Dynamic Delta Re-fogging** | *Atmospheric Lifecycle* | Smooth, frame-rate independent (delta-ms) condensation recovery with 4 selectable speeds: Paused (0x), Slow (0.5x), Normal (1.0x), and Fast (2.5x). |
-| 📸 **Snapshot Studio** | *Export Suite* | Composites all canvas layers (reflection + fog + etched paths + active droplets) into a downloadable high-resolution PNG (`foggy-mirror-snapshot-<timestamp>.png`) with an optical shutter flash. |
-| ↩️ **Bounded Undo History** | *Productivity* | Reverses the most recent stroke or wipe gesture seamlessly with `Ctrl + Z` / `Cmd + Z`. |
-| 🔊 **Procedural Web Audio Steam** | *Audio Synthesis* | Zero-asset soothing ambient steam and wiping impulses synthesized purely through Web Audio API pink/white noise nodes (muted by default). |
-| 🖥️ **Studio-Grade Responsive UI** | *Apple/Spotify Aesthetic* | Graphite/charcoal palette with Plus Jakarta Sans typography, refined micro-interactions, full keyboard shortcuts, and responsive layouts across phones, tablets, and desktops. |
+| **Layer 1** | **Clear Glass & Optical Light Scattering** | Untouched glass diffuses the background reflection (webcam or atmospheric room) with a 16px Gaussian light-scattering blur. Cleared regions reveal a razor-sharp, high-contrast mirror reflection underneath via hardware-accelerated alpha masks (`destination-in`). |
+| **Layer 2** | **Macro Condensation Clouds** | C2-continuous quintic Perlin noise ($6t^5 - 15t^4 + 10t^3$, wavelength ~200px) creating soft, organic variations in moisture density across the pane, with naturally cooler, denser frame perimeter edges. |
+| **Layer 3** | **Meso Moisture Eddies & Swirls** | Secondary octave noise (~48px wavelength) producing realistic turbulence, uneven patches of moisture, and delicate translucent mist tendrils. |
+| **Layer 4** | **Micro-Droplet Condensation Field** | Over 4,000 microscopic water beads (0.8px–3.2px) rendered with soft contact shadow crescents, refractive bodies, and pinpoint specular catchlights from ambient room lighting. |
+| **Layer 5** | **Living Gravity Droplets & Runs** | Fluid water beads with surface tension wobble and gravity acceleration that roll down the glass, wiping clear trickle trails through the condensation. |
+
+---
+
+## ✨ Key Features & Innovations
+
+- 🚫 **Zero Checkerboard / Grid Artifacts:** Replaced blocky integer-step noise with true C2-continuous quintic gradient noise; eliminates repeating patterns and digital grid artifacts.
+- 🌫️ **Authentic Translucent Mist Tone:** Replaced flat, chalky white fills with soft neutral mist-greys (`#c2d0df` base in bathroom mode) with natural translucency (0.42 to 0.72 alpha), letting diffused room reflections and ambient lighting shine through realistically.
+- ✍️ **Contact Meniscus Edge Ridge:** Etching or wiping with finger/mouse pushes moisture to the perimeter of the stroke, creating a subtle ridge of condensed water beads along the boundary before revealing 100% crystal-clear glass.
+- 🌬️ **Organic Nucleation & Steam Breath:** Click **Blow Mist** or hit `B` / `M` to breathe a warm puff of steam onto the glass! Mist blooms outward from the center via organic nucleation sites with an authentic synthesized breath whoosh sound.
+- ☝️ **Dual-Mode CV Gesture Tracking:** MediaPipe Hands integration detecting 21 3D landmarks in real time. Point with an index finger (`☝️`) to etch crisp lines; open your palm (`🖐`) to wipe away mist across a broad radius.
+- 🎨 **Mirror Moments Presets:** Instant parametric condensation etchings: **Heart**, **Star**, **Smile**, and **Sun** etched with realistic edge-feathered strokes.
+- 🧪 **Fog Lab Sandbox:** Modal environment controls to switch live lighting presets (**Bathroom Warmth**, **Obsidian Studio**, **Sunset Glow**), adjust real-time Gaussian scattering blur (4px–32px), and tune droplet density.
+- 🎬 **Demonstration Mode (Tour):** 6-stage automated presentation sequence with an on-screen HUD badge demonstrating Draw, Palm Wipe, Stencils, and Optical scattering without manual intervention.
+- 📸 **Snapshot Studio:** High-res PNG export (`foggy-mirror-snapshot-<timestamp>.png`) with an optical shutter flash and toast notification.
+- ↩️ **Bounded Undo Stack:** Reverses recent stroke or wipe actions (`Ctrl + Z` / `Cmd + Z`).
+- 🔊 **Procedural Web Audio Steam:** Zero-asset soothing ambient steam and wiping impulses synthesized purely through Web Audio API pink/white noise nodes (muted by default).
 
 ---
 
@@ -35,6 +45,7 @@ Experience the authentic sensation of drawing on a steamed-up bathroom mirror or
 ### 1. Pointer / Touch / Stylus Input
 - **Draw:** Click/touch and drag across the mirror surface to etch crisp transparent lines through the mist.
 - **Wipe:** Switch to Palm Wipe mode (`W`) to clear broad regions with soft, feathered edges.
+- **Blow Mist:** Click **Blow Mist** in the toolbar or press `B` or `M` to breathe warm steam onto the glass.
 - **Undo:** Click `Undo` in the studio bar or press `Ctrl + Z` (`Cmd + Z` on macOS).
 - **Fullscreen:** Press `F` to toggle full-screen immersion.
 
@@ -49,17 +60,18 @@ Experience the authentic sensation of drawing on a steamed-up bathroom mirror or
 |---|---|
 | `D` | Switch to Draw Mode |
 | `W` | Switch to Palm Wipe Mode |
-| `Ctrl + Z` / `Cmd + Z` | Undo last stroke |
-| `R` | Re-fog entire mirror |
+| `B` / `M` | Blow warm breath / steam onto mirror |
+| `R` | Re-fog entire mirror organically |
 | `C` | Wipe mirror clean |
+| `Ctrl + Z` / `Cmd + Z` | Undo last stroke |
 | `F` | Toggle Fullscreen |
-| `Esc` | Close open modals (Fog Lab, Help) |
+| `Esc` | Close open modals (Fog Lab, Moments) |
 
 ---
 
 ## 🚀 How to Run Locally
 
-FOGGY MIRROR is built with zero dependencies, build tools, or bundlers. You can run it instantly from source:
+FOGGY MIRROR has **zero build tools, bundlers, or package installations**. It runs directly as a static web application:
 
 1. **Clone the repository:**
    ```bash
@@ -90,7 +102,7 @@ FOGGY MIRROR is built with zero dependencies, build tools, or bundlers. You can 
 1. Push the repository to GitHub:
    ```bash
    git add index.html README.md
-   git commit -m "🏆 FOGGY MIRROR — Ultimate Tournament Edition"
+   git commit -m "🌫️ FOGGY MIRROR — Photorealistic Window Condensation Redesign"
    git push origin main
    ```
 2. Navigate to your repository's **Settings > Pages**.
@@ -100,16 +112,16 @@ FOGGY MIRROR is built with zero dependencies, build tools, or bundlers. You can 
 
 ---
 
-## 🛠️ Architecture & Technologies
+## 🛠️ Technology Stack
 
+- **HTML5 Multi-Pass Canvas API** — Hardware-accelerated compositing with `destination-in` alpha masking and precomputed texture buffers.
+- **Procedural Quintic C2 Perlin Noise** — Multi-octave continuous gradient noise eliminating all checkerboard and tiling artifacts.
 - **MediaPipe Hands (`@mediapipe/hands`)** — Real-time 21-point 3D hand tracking at 60 FPS in WebAssembly.
-- **HTML5 Dual-Canvas Compositing** — Dual-pass rendering using a background reflection canvas and an offscreen alpha masking canvas (`sharpCanvas`) with `globalCompositeOperation = 'destination-in'`.
-- **Procedural Multi-Scale Fractal Noise** — Layered per-pixel condensation texture generation with natural variations in moisture density.
-- **Web Audio API** — Real-time biquad-filtered noise generation for dynamic steam acoustics.
-- **Vanilla Modern JavaScript (ES6+) & CSS3** — Zero framework overhead, zero layout shifts, 60 FPS rendering pipeline.
+- **Web Audio API** — Real-time procedural white/pink noise synthesis and resonant bandpass breath simulation.
+- **Vanilla Modern JavaScript (ES6+) & CSS3** — Zero framework overhead, zero layout shifts, locked 60 FPS rendering pipeline.
 
 ---
 
 ## 📄 License
 
-MIT License — Built with pride for creative technology competitions and hackathons.
+MIT License — Built for creative technology competitions, hackathons, and interactive installations.
