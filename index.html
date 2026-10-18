@@ -3,43 +3,57 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>MIST • Photorealistic Studio Glass</title>
+  <title>FOGGY MIRROR — Interactive Glass Condensation Experience</title>
 
-  <!-- Anti-cache meta -->
+  <!-- Cache control headers for deployment -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <meta http-equiv="Expires" content="0"/>
 
-  <!-- Google Fonts: Plus Jakarta Sans -->
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- MediaPipe: Hands tracking -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
 
   <style>
-    /* ══════════════════════════════════════════════════
-       DESIGN SYSTEM • Apple / Spotify Studio Dark Palette
-       ══════════════════════════════════════════════════ */
+    /* ══════════════════════════════════════════════════════
+       DESIGN SYSTEM • Apple / Spotify Dark Professional Theme
+       ══════════════════════════════════════════════════════ */
     :root {
-      --bg-base: #07080b;
-      --bg-surface: rgba(16, 18, 24, 0.78);
+      --bg-dark: #0a0c10;
+      --bg-surface: rgba(18, 21, 28, 0.78);
+      --bg-surface-hover: rgba(26, 30, 40, 0.88);
+      --bg-elevated: rgba(30, 35, 48, 0.92);
+      
       --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-highlight: rgba(255, 255, 255, 0.14);
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent-blue: #60a5fa;
-      --accent-warm: #fbbf24;
+      --border-medium: rgba(255, 255, 255, 0.14);
+      --border-bright: rgba(255, 255, 255, 0.24);
+      
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --accent-blue: #38bdf8;
+      --accent-blue-dim: rgba(56, 189, 248, 0.14);
+      --accent-amber: #fbbf24;
+      --accent-amber-dim: rgba(251, 191, 36, 0.14);
       --accent-emerald: #34d399;
+      
+      --radius-sm: 8px;
       --radius-md: 12px;
-      --radius-lg: 18px;
-      --radius-xl: 24px;
+      --radius-lg: 16px;
+      --radius-xl: 22px;
+      
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
       --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.6);
-      --shadow-lg: 0 24px 70px -15px rgba(0, 0, 0, 0.9);
+      --shadow-lg: 0 24px 70px -10px rgba(0, 0, 0, 0.9);
+      
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     *, *::before, *::after {
@@ -49,23 +63,23 @@
     }
 
     body {
-      background: var(--bg-base);
+      background: var(--bg-dark);
       background-image:
-        radial-gradient(ellipse 65% 45% at 50% -12%, rgba(56, 110, 190, 0.14), transparent 70%),
-        radial-gradient(circle at 85% 90%, rgba(90, 115, 150, 0.04), transparent 50%);
+        radial-gradient(ellipse 70% 45% at 50% -10%, rgba(45, 95, 170, 0.14), transparent 75%),
+        radial-gradient(circle at 85% 90%, rgba(70, 90, 130, 0.05), transparent 50%);
       min-height: 100vh;
       display: flex; flex-direction: column;
       align-items: center; justify-content: space-between;
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      color: var(--text-primary);
-      padding: 18px 24px 20px;
+      color: var(--text-main);
+      padding: 16px 20px;
       overflow-x: hidden;
       user-select: none;
     }
 
-    /* ── Header ── */
+    /* ── App Navigation Header ── */
     header {
-      width: 100%; max-width: 960px;
+      width: 100%; max-width: 980px;
       display: flex; align-items: center; justify-content: space-between;
       padding: 10px 18px;
       background: var(--bg-surface);
@@ -75,100 +89,109 @@
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
       z-index: 30;
-      transition: all 0.3s ease;
+      transition: var(--transition-normal);
     }
 
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-mark {
-      width: 28px; height: 28px;
-      border-radius: 8px;
+    .brand-section {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .brand-crest {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-sm);
       background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.03));
-      border: 1px solid var(--border-highlight);
+      border: 1px solid var(--border-medium);
       display: flex; align-items: center; justify-content: center;
       color: var(--accent-blue);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     }
-    .brand-mark svg { width: 15px; height: 15px; fill: currentColor; }
-    
+    .brand-crest svg { width: 17px; height: 17px; fill: currentColor; }
+
+    .brand-titles {
+      display: flex; flex-direction: column;
+    }
     .brand-name {
-      font-size: 0.88rem; font-weight: 700;
-      letter-spacing: 1.5px; text-transform: uppercase;
-      color: #ffffff;
-      display: flex; align-items: center; gap: 8px;
+      font-size: 0.92rem; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: #ffffff; line-height: 1.1;
     }
-    .brand-badge {
-      font-size: 0.60rem; font-weight: 600;
+    .brand-tag {
+      font-size: 0.62rem; font-weight: 500;
       letter-spacing: 0.8px; text-transform: uppercase;
-      background: rgba(96, 165, 250, 0.12);
-      border: 1px solid rgba(96, 165, 250, 0.28);
-      color: var(--accent-blue);
-      padding: 2px 7px; border-radius: 6px;
+      color: var(--text-dim);
     }
 
-    .header-status {
+    .header-center-info {
       display: flex; align-items: center; gap: 8px;
-      font-size: 0.72rem; color: var(--text-secondary);
-      font-weight: 500;
+      font-size: 0.72rem; color: var(--text-muted); font-weight: 500;
     }
-    .status-dot {
+    .pulse-dot {
       width: 7px; height: 7px; border-radius: 50%;
-      background: #475569;
+      background: var(--text-dim);
       transition: background 0.3s, box-shadow 0.3s;
     }
-    .status-dot.active {
+    .pulse-dot.active {
       background: var(--accent-emerald);
-      box-shadow: 0 0 10px rgba(52, 211, 153, 0.7);
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.8);
     }
 
-    .header-pills { display: flex; align-items: center; gap: 6px; }
-    .mode-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 0.67rem; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase;
-      padding: 5px 12px; border-radius: 20px;
+    .header-quick-tools {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tool-tab-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 0.70rem; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase;
+      padding: 6px 14px; border-radius: 20px;
       border: 1px solid var(--border-subtle);
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(255, 255, 255, 0.03);
       color: var(--text-muted);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      transition: var(--transition-normal);
     }
-    .mode-pill svg { width: 13px; height: 13px; fill: currentColor; opacity: 0.7; }
-    .mode-pill.active-draw {
+    .tool-tab-btn svg { width: 13px; height: 13px; fill: currentColor; }
+    .tool-tab-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      border-color: var(--border-medium);
+    }
+    .tool-tab-btn.active-draw {
       color: #fef08a;
-      background: rgba(251, 191, 36, 0.12);
+      background: var(--accent-amber-dim);
       border-color: rgba(251, 191, 36, 0.45);
-      box-shadow: 0 0 14px rgba(251, 191, 36, 0.2);
+      box-shadow: 0 0 14px rgba(251, 191, 36, 0.25);
     }
-    .mode-pill.active-wipe {
+    .tool-tab-btn.active-wipe {
       color: #bae6fd;
-      background: rgba(96, 165, 250, 0.12);
-      border-color: rgba(96, 165, 250, 0.45);
-      box-shadow: 0 0 14px rgba(96, 165, 250, 0.2);
+      background: var(--accent-blue-dim);
+      border-color: rgba(56, 189, 248, 0.45);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
     }
 
-    /* ── Main Mirror Viewport ── */
+    /* ── Main Mirror Viewport Container ── */
     main {
       width: 100%; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       margin: auto 0;
-      padding: 10px 0;
+      padding: 8px 0;
     }
 
-    .glass-chassis {
+    .mirror-frame {
       position: relative;
       width: 640px; height: 480px;
       max-width: 95vw;
       aspect-ratio: 4/3;
       border-radius: var(--radius-xl);
       overflow: hidden;
-      background: #020305;
-      border: 1px solid var(--border-highlight);
+      background: #020306;
+      border: 1px solid var(--border-medium);
       box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.85),
+        0 0 0 1px rgba(0, 0, 0, 0.9),
         var(--shadow-lg),
-        inset 0 1px 1px rgba(255, 255, 255, 0.15);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        inset 0 1px 1px rgba(255, 255, 255, 0.16);
+      touch-action: none; /* Crucial: prevents mobile scroll while drawing */
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
     }
 
-    .glass-chassis canvas {
+    .mirror-frame canvas {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
       object-fit: cover;
@@ -179,8 +202,8 @@
     #handCanvas { z-index: 3; pointer-events: none; }
     #uiCanvas   { z-index: 4; pointer-events: none; }
 
-    /* Minimal Viewport HUD */
-    .hud-overlay {
+    /* Floating Viewport HUD */
+    .viewport-hud {
       position: absolute; inset: 0;
       z-index: 10; pointer-events: none;
       display: flex; flex-direction: column;
@@ -188,120 +211,157 @@
       padding: 14px 16px;
     }
 
-    .hud-top {
+    .hud-header {
       display: flex; justify-content: space-between; align-items: center;
       width: 100%;
     }
-    .hud-chip {
-      background: rgba(10, 12, 16, 0.65);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+    .hud-badge {
+      background: rgba(12, 15, 22, 0.70);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid var(--border-subtle);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       padding: 4px 10px;
       font-size: 0.65rem; font-weight: 500;
-      color: var(--text-secondary);
-      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
+      font-family: 'JetBrains Mono', monospace;
       display: flex; align-items: center; gap: 6px;
     }
 
-    #gestureBadge {
+    #activeBanner {
       align-self: center;
       display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(12, 14, 20, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border-highlight);
+      background: rgba(14, 17, 24, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border-medium);
       border-radius: 30px;
-      padding: 6px 16px;
+      padding: 6px 18px;
       font-size: 0.72rem; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
-      color: var(--text-primary);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-      opacity: 0; transform: translateY(-10px) scale(0.96);
+      color: var(--text-main);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      opacity: 0; transform: translateY(-8px) scale(0.97);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: none;
     }
-    #gestureBadge.show { opacity: 1; transform: translateY(0) scale(1); }
-    #gestureBadge.badge-draw { border-color: rgba(251, 191, 36, 0.4); color: #fef08a; }
-    #gestureBadge.badge-wipe { border-color: rgba(96, 165, 250, 0.4); color: #bae6fd; }
+    #activeBanner.visible { opacity: 1; transform: translateY(0) scale(1); }
+    #activeBanner.style-draw { border-color: rgba(251, 191, 36, 0.4); color: #fef08a; }
+    #activeBanner.style-wipe { border-color: rgba(56, 189, 248, 0.4); color: #bae6fd; }
 
-    .hud-bottom {
+    .hud-footer {
       display: flex; justify-content: space-between; align-items: flex-end;
       width: 100%;
     }
-    .hud-hint {
-      display: flex; align-items: center; gap: 14px;
-      background: rgba(8, 10, 14, 0.65);
+    .hud-prompt {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(10, 13, 18, 0.68);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border-subtle);
       border-radius: 10px;
-      padding: 6px 12px;
-      font-size: 0.62rem; color: var(--text-muted);
+      padding: 6px 14px;
+      font-size: 0.63rem; color: var(--text-dim);
       letter-spacing: 0.4px;
     }
-    .hud-hint span { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-weight: 500; }
+    .hud-prompt span { display: flex; align-items: center; gap: 5px; color: var(--text-muted); font-weight: 500; }
 
-    /* Polished Loader */
-    #loader {
+    /* Camera flash effect */
+    #flashOverlay {
+      position: absolute; inset: 0; background: #ffffff;
+      opacity: 0; pointer-events: none; z-index: 25;
+      transition: opacity 0.35s ease-out;
+    }
+
+    /* Polished Loading View */
+    #loaderOverlay {
       position: absolute; inset: 0;
-      background: rgba(8, 9, 13, 0.96);
+      background: rgba(8, 10, 14, 0.96);
       backdrop-filter: blur(20px);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       gap: 16px; z-index: 50;
-      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.5s ease;
     }
-    #loader.gone { opacity: 0; pointer-events: none; }
+    #loaderOverlay.hidden { opacity: 0; pointer-events: none; }
     
-    .loader-ring { position: relative; width: 44px; height: 44px; }
-    .loader-ring svg { width: 100%; height: 100%; animation: spin 1.4s linear infinite; }
-    .loader-ring circle {
+    .spinner-ring { position: relative; width: 44px; height: 44px; }
+    .spinner-ring svg { width: 100%; height: 100%; animation: spin 1.4s linear infinite; }
+    .spinner-ring circle {
       fill: none; stroke-width: 3.5; stroke-linecap: round;
-      stroke: rgba(142, 197, 252, 0.15);
+      stroke: rgba(255, 255, 255, 0.08);
     }
-    .loader-ring circle.progress {
+    .spinner-ring circle.active-track {
       stroke: var(--accent-blue);
       stroke-dasharray: 100; stroke-dashoffset: 65;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .loader-text { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    #loaderTitle { font-size: 0.85rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
-    #loaderSub   { font-size: 0.70rem; color: var(--text-muted); }
+    .loader-captions { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+    #loadHeader { font-size: 0.86rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
+    #loadDetail { font-size: 0.70rem; color: var(--text-dim); }
+
+    /* ── First-Use Guidance Banner ── */
+    #introGuidance {
+      width: 100%; max-width: 980px;
+      background: rgba(18, 22, 30, 0.75);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 14px; font-size: 0.72rem; color: var(--text-muted);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    #introGuidance.closed { display: none; }
+    .guide-items { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .guide-item { display: flex; align-items: center; gap: 6px; }
+    .guide-item strong { color: var(--text-main); font-weight: 600; }
+    .btn-dismiss {
+      background: none; border: none; color: var(--text-dim);
+      font-size: 0.75rem; cursor: pointer; padding: 4px;
+      transition: color 0.2s;
+    }
+    .btn-dismiss:hover { color: var(--text-main); }
 
     /* ── Studio Control Dock ── */
-    .dock-container {
-      width: 100%; max-width: 960px;
+    .dock-wrapper {
+      width: 100%; max-width: 980px;
       display: flex; flex-direction: column; align-items: center; gap: 10px;
       z-index: 30;
     }
 
-    .studio-dock {
+    .studio-panel {
       width: 100%;
       background: var(--bg-surface);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-xl);
-      padding: 10px 18px;
+      padding: 12px 20px;
       box-shadow: var(--shadow-md);
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 16px; flex-wrap: wrap;
+      display: flex; flex-direction: column; gap: 14px;
     }
 
-    .dock-sliders {
-      display: flex; align-items: center; gap: 20px;
-      flex: 1; min-width: 280px;
+    /* Top Row of Sliders */
+    .controls-row-sliders {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+      width: 100%;
     }
-    .slider-item { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-    .slider-header {
+
+    .param-control {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .param-header {
       display: flex; justify-content: space-between; align-items: center;
       font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.6px; color: var(--text-secondary);
+      letter-spacing: 0.8px; color: var(--text-muted);
     }
-    .slider-val {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    .param-val {
+      font-family: 'JetBrains Mono', monospace;
       font-size: 0.68rem; color: var(--accent-blue);
     }
 
@@ -312,7 +372,7 @@
       border-radius: 4px; outline: none; cursor: pointer;
       transition: background 0.2s;
     }
-    input[type="range"]:hover { background: rgba(255, 255, 255, 0.15); }
+    input[type="range"]:hover { background: rgba(255, 255, 255, 0.16); }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none; appearance: none;
       width: 14px; height: 14px; border-radius: 50%;
@@ -327,249 +387,377 @@
       box-shadow: 0 0 12px var(--accent-blue);
     }
 
-    .dock-actions { display: flex; align-items: center; gap: 8px; }
-    .btn-action {
+    /* Bottom Row of Action Buttons & Toggles */
+    .controls-row-actions {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .action-group {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+
+    .btn-studio {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-subtle);
-      color: var(--text-primary);
-      padding: 8px 16px;
-      border-radius: var(--radius-md);
-      font-size: 0.74rem; font-family: inherit; font-weight: 600;
-      letter-spacing: 0.4px;
-      display: inline-flex; align-items: center; gap: 7px;
+      color: var(--text-main);
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.72rem; font-family: inherit; font-weight: 600;
+      letter-spacing: 0.3px;
+      display: inline-flex; align-items: center; gap: 6px;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: var(--transition-normal);
     }
-    .btn-action svg { width: 14px; height: 14px; fill: currentColor; }
-    .btn-action:hover {
+    .btn-studio svg { width: 13px; height: 13px; fill: currentColor; }
+    .btn-studio:hover {
       background: rgba(255, 255, 255, 0.08);
-      border-color: var(--border-highlight);
+      border-color: var(--border-medium);
       color: #ffffff;
       transform: translateY(-1px);
     }
-    .btn-action:active { transform: translateY(1px); }
-    
-    .btn-action.btn-primary {
-      background: linear-gradient(135deg, rgba(96, 165, 250, 0.25), rgba(96, 165, 250, 0.10));
-      border-color: rgba(96, 165, 250, 0.4);
-      color: #dbeafe;
-    }
-    .btn-action.btn-primary:hover {
-      background: linear-gradient(135deg, rgba(96, 165, 250, 0.35), rgba(96, 165, 250, 0.15));
-      border-color: rgba(96, 165, 250, 0.6);
-      box-shadow: 0 0 16px rgba(96, 165, 250, 0.3);
+    .btn-studio:active { transform: translateY(1px); }
+    .btn-studio:disabled {
+      opacity: 0.4; cursor: not-allowed; transform: none;
     }
 
-    /* Toast Notification */
-    #toast {
+    .btn-studio.btn-accent {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(56, 189, 248, 0.08));
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #e0f2fe;
+    }
+    .btn-studio.btn-accent:hover {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.32), rgba(56, 189, 248, 0.12));
+      border-color: rgba(56, 189, 248, 0.6);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+    }
+
+    .btn-studio.btn-active {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: var(--border-bright);
+      color: #fff;
+    }
+
+    /* Toast alert banner */
+    #toastNotification {
       position: fixed; top: 22px; right: 24px;
       background: rgba(16, 20, 28, 0.94);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border-highlight);
+      border: 1px solid var(--border-medium);
       box-shadow: var(--shadow-md);
       border-radius: var(--radius-md);
-      padding: 10px 16px;
+      padding: 10px 18px;
       display: flex; align-items: center; gap: 10px;
-      font-size: 0.75rem; font-weight: 500;
+      font-size: 0.74rem; font-weight: 500;
       color: #ffffff;
       transform: translateY(-30px); opacity: 0; pointer-events: none;
       transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 100;
     }
-    #toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
-    #toast svg { width: 16px; height: 16px; fill: var(--accent-emerald); }
+    #toastNotification.visible { transform: translateY(0); opacity: 1; pointer-events: auto; }
+    #toastNotification svg { width: 16px; height: 16px; fill: var(--accent-emerald); }
 
-    /* Flash shutter */
-    #shutterFlash {
-      position: absolute; inset: 0; background: #ffffff;
-      opacity: 0; pointer-events: none; z-index: 25;
-      transition: opacity 0.35s ease-out;
+    /* Fullscreen chassis mode */
+    .mirror-frame:fullscreen {
+      width: 100vw; height: 100vh;
+      max-width: 100vw; aspect-ratio: auto;
+      border-radius: 0; border: none;
+    }
+    .mirror-frame:-webkit-full-screen {
+      width: 100vw; height: 100vh;
+      max-width: 100vw; aspect-ratio: auto;
+      border-radius: 0; border: none;
     }
 
+    /* ── Responsive Adaptations ── */
     @media (max-width: 768px) {
-      body { padding: 12px 14px; gap: 10px; }
+      body { padding: 10px 12px; gap: 8px; }
       header { padding: 8px 14px; }
-      .brand-name { font-size: 0.78rem; }
-      .brand-badge { display: none; }
-      .glass-chassis { width: 100%; border-radius: var(--radius-lg); }
-      .studio-dock { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px; }
-      .dock-sliders { flex-direction: column; gap: 12px; min-width: 100%; }
-      .dock-actions { justify-content: stretch; }
-      .dock-actions .btn-action { flex: 1; justify-content: center; }
-      .hud-hint { display: none; }
+      .brand-tag { display: none; }
+      .header-center-info { display: none; }
+      .mirror-frame { width: 100%; border-radius: var(--radius-lg); }
+      .controls-row-sliders { grid-template-columns: 1fr; gap: 10px; }
+      .controls-row-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+      .action-group { justify-content: stretch; }
+      .action-group .btn-studio { flex: 1; justify-content: center; }
+      .hud-prompt { display: none; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top App Navigation -->
+  <!-- App Header Navigation -->
   <header>
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true">
+    <div class="brand-section">
+      <div class="brand-crest" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg>
       </div>
-      <span class="brand-name">MIST <span class="brand-badge">STUDIO GLASS</span></span>
+      <div class="brand-titles">
+        <span class="brand-name">FOGGY MIRROR</span>
+        <span class="brand-tag">Studio Condensation Engine</span>
+      </div>
     </div>
 
-    <div class="header-status">
-      <div class="status-dot" id="camStatusDot"></div>
-      <span id="camStatusText">Connecting…</span>
+    <div class="header-center-info">
+      <div class="pulse-dot" id="systemStatusDot"></div>
+      <span id="systemStatusMsg">Calibrating vision…</span>
     </div>
 
-    <div class="header-pills">
-      <div class="mode-pill" id="pillDraw">
+    <!-- Active Tool Tabs -->
+    <div class="header-quick-tools">
+      <button class="tool-tab-btn active-draw" id="tabDraw" title="Switch to Drawing brush (Index finger or Pointer)">
         <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
         Draw
-      </div>
-      <div class="mode-pill" id="pillWipe">
+      </button>
+      <button class="tool-tab-btn" id="tabWipe" title="Switch to Palm Wipe mode">
         <svg viewBox="0 0 24 24"><path d="M23 5.5V20c0 2.2-1.8 4-4 4h-7.5c-1.3 0-2.6-.5-3.5-1.5L1 15.5l1.5-1.5c.4-.4 1-.6 1.5-.6.2 0 .4 0 .6.1L8 15V4c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5v6.5h1V2c0-.8.7-1.5 1.5-1.5S15 1.2 15 2v8.5h1V3.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V11h1V5.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5z"/></svg>
         Wipe
-      </div>
+      </button>
     </div>
   </header>
 
-  <!-- Studio Glass Mirror Viewport -->
+  <!-- Dismissible User Guidance -->
+  <aside id="introGuidance" role="region" aria-label="First use guide">
+    <div class="guide-items">
+      <div class="guide-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        <span><strong>Draw:</strong> Point index finger or drag mouse / stylus.</span>
+      </div>
+      <div class="guide-item">
+        <span><strong>Wipe:</strong> Wave open palm or select Wipe tool.</span>
+      </div>
+      <div class="guide-item">
+        <span><strong>Snapshot:</strong> Export pure mirror artwork as high-res PNG.</span>
+      </div>
+    </div>
+    <button class="btn-dismiss" id="btnDismissGuide" aria-label="Dismiss guide">✕</button>
+  </aside>
+
+  <!-- Central Mirror Viewport -->
   <main>
-    <div class="glass-chassis" id="glassWrap">
+    <div class="mirror-frame" id="mirrorChassis">
       <canvas id="camCanvas"  width="640" height="480"></canvas>
       <canvas id="fogCanvas"  width="640" height="480"></canvas>
       <canvas id="handCanvas" width="640" height="480"></canvas>
       <canvas id="uiCanvas"   width="640" height="480"></canvas>
 
       <!-- Viewport HUD Overlay -->
-      <div class="hud-overlay">
-        <div class="hud-top">
-          <div class="hud-chip">
-            <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#38bdf8;"></span>
+      <div class="viewport-hud">
+        <div class="hud-header">
+          <div class="hud-badge">
+            <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent-blue);"></span>
             <span>640 × 480</span>
           </div>
 
-          <div id="gestureBadge"></div>
+          <div id="activeBanner"></div>
 
-          <div class="hud-chip">
-            <span id="fpsChip">60 FPS</span>
+          <div class="hud-badge">
+            <span id="fpsCounter">60 FPS</span>
           </div>
         </div>
 
-        <div class="hud-bottom">
-          <div class="hud-hint">
-            <span>☝️ Index Point: Draw</span>
+        <div class="hud-footer">
+          <div class="hud-prompt">
+            <span>☝️ Index / Pointer: Draw</span>
             <span>•</span>
-            <span>🖐 Moving Palm: Wipe</span>
+            <span>🖐 Open Palm: Wipe Surface</span>
           </div>
         </div>
       </div>
 
-      <!-- Shutter Flash for Snapshots -->
-      <div id="shutterFlash"></div>
+      <!-- Shutter Flash on Snapshot -->
+      <div id="flashOverlay"></div>
 
-      <!-- Loading Overlay -->
-      <div id="loader">
-        <div class="loader-ring">
+      <!-- Loading View -->
+      <div id="loaderOverlay">
+        <div class="spinner-ring">
           <svg viewBox="0 0 44 44">
             <circle cx="22" cy="22" r="18"/>
-            <circle class="progress" cx="22" cy="22" r="18"/>
+            <circle class="active-track" cx="22" cy="22" r="18"/>
           </svg>
         </div>
-        <div class="loader-text">
-          <span id="loaderTitle">Initializing Studio Vision</span>
-          <span id="loaderSub">Calibrating hand tracking engine…</span>
+        <div class="loader-captions">
+          <span id="loadHeader">Initializing Foggy Mirror</span>
+          <span id="loadDetail">Loading optical scattering & vision engine…</span>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- Studio Floating Control Dock -->
-  <div class="dock-container">
-    <div class="studio-dock">
-      <div class="dock-sliders">
+  <!-- Complete Control Panel -->
+  <div class="dock-wrapper">
+    <div class="studio-panel">
+      
+      <!-- Sliders Row -->
+      <div class="controls-row-sliders">
         <!-- Brush Size -->
-        <div class="slider-item">
-          <div class="slider-header">
-            <span>Tip Size</span>
-            <span class="slider-val" id="valDraw">10 px</span>
+        <div class="param-control">
+          <div class="param-header">
+            <span>Brush Size</span>
+            <span class="param-val" id="valBrushSize">12 px</span>
           </div>
-          <input type="range" id="drawSize" min="4" max="28" value="10"/>
+          <input type="range" id="sliderBrushSize" min="4" max="44" value="12" aria-label="Brush size adjustment"/>
         </div>
 
         <!-- Fog Density -->
-        <div class="slider-item">
-          <div class="slider-header">
-            <span>Steam Density</span>
-            <span class="slider-val" id="valDensity">98%</span>
+        <div class="param-control">
+          <div class="param-header">
+            <span>Fog Density</span>
+            <span class="param-val" id="valFogDensity">98%</span>
           </div>
-          <input type="range" id="fogDensity" min="0.80" max="1.00" step="0.01" value="0.98"/>
+          <input type="range" id="sliderFogDensity" min="0.65" max="1.00" step="0.01" value="0.98" aria-label="Fog density adjustment"/>
         </div>
 
-        <!-- Re-fog Rate -->
-        <div class="slider-item">
-          <div class="slider-header">
-            <span>Refog Rate</span>
-            <span class="slider-val" id="valRefog">1.0x</span>
+        <!-- Brush Softness -->
+        <div class="param-control">
+          <div class="param-header">
+            <span>Stroke Softness</span>
+            <span class="param-val" id="valBrushSoftness">80%</span>
           </div>
-          <input type="range" id="refogSpeed" min="0" max="5" step="0.2" value="1.0"/>
+          <input type="range" id="sliderBrushSoftness" min="0.10" max="1.00" step="0.05" value="0.80" aria-label="Brush softness adjustment"/>
+        </div>
+
+        <!-- Re-fog Speed -->
+        <div class="param-control">
+          <div class="param-header">
+            <span>Re-fog Speed</span>
+            <span class="param-val" id="valRefogSpeed">Normal (1.0x)</span>
+          </div>
+          <input type="range" id="sliderRefogSpeed" min="0" max="3" step="1" value="2" aria-label="Re-fog speed adjustment"/>
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="dock-actions">
-        <button class="btn-action" id="clearBtn" title="Reset fog over the entire surface">
-          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          Reset Glass
-        </button>
-        <button class="btn-action btn-primary" id="snapBtn" title="Capture high resolution mirror snapshot">
-          <svg viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 100-6.4 3.2 3.2 0 000 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-          Capture
-        </button>
+      <!-- Action Buttons Row -->
+      <div class="controls-row-actions">
+        <!-- Editing & State Group -->
+        <div class="action-group">
+          <!-- Undo Button -->
+          <button class="btn-studio" id="btnUndo" disabled title="Undo last drawing stroke (Ctrl+Z)">
+            <svg viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+            Undo
+          </button>
+          
+          <!-- Clear Mirror (Wipes fog away completely) -->
+          <button class="btn-studio" id="btnClear" title="Clear mirror completely">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            Clear Mirror
+          </button>
+
+          <!-- Re-fog All -->
+          <button class="btn-studio" id="btnRefogAll" title="Restore complete condensation">
+            <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            Re-fog All
+          </button>
+
+          <!-- Reset to Default -->
+          <button class="btn-studio" id="btnReset" title="Reset all mirror parameters to initial state">
+            <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+            Reset
+          </button>
+        </div>
+
+        <!-- Visual Toggles & Snapshot Group -->
+        <div class="action-group">
+          <!-- Toggle Droplets -->
+          <button class="btn-studio btn-active" id="btnToggleDroplets" title="Toggle water condensation droplets and runs">
+            <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            Droplets
+          </button>
+
+          <!-- Toggle Optical Blur -->
+          <button class="btn-studio btn-active" id="btnToggleOptics" title="Toggle physics-based optical light scattering blur">
+            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            Blur Optics
+          </button>
+
+          <!-- Sound Mute/Unmute -->
+          <button class="btn-studio" id="btnToggleAudio" title="Toggle ambient steam atmosphere sound">
+            <svg id="audioIcon" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+            Sound
+          </button>
+
+          <!-- Fullscreen -->
+          <button class="btn-studio" id="btnFullscreen" title="Toggle Fullscreen view (F)">
+            <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+            Fullscreen
+          </button>
+
+          <!-- Snapshot / Export -->
+          <button class="btn-studio btn-accent" id="btnSnapshot" title="Export high-resolution mirror artwork as PNG">
+            <svg viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 100-6.4 3.2 3.2 0 000 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+            Snapshot
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
 
   <!-- Notification Toast -->
-  <div id="toast">
+  <div id="toastNotification" role="status" aria-live="polite">
     <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-    <span id="toastMsg">Snapshot saved to Downloads</span>
+    <span id="toastText">Action completed successfully</span>
   </div>
 
-  <video id="video" autoplay playsinline style="display:none"></video>
+  <!-- Hidden video stream element -->
+  <video id="videoElement" autoplay playsinline style="display:none"></video>
 
   <script>
-  // ════════════════════════════════════════════════════
-  //  CORE APPLICATION & STATE
-  // ════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════
+  //  APPLICATION ARCHITECTURE & CONSTANTS
+  // ══════════════════════════════════════════════════════
   const W = 640, H = 480;
-  const video         = document.getElementById('video');
-  const camCanvas     = document.getElementById('camCanvas');
-  const fogCanvas     = document.getElementById('fogCanvas');
-  const handCanvas    = document.getElementById('handCanvas');
-  const uiCanvas      = document.getElementById('uiCanvas');
-  const glassWrap     = document.getElementById('glassWrap');
-  const loader        = document.getElementById('loader');
-  const loaderTitle   = document.getElementById('loaderTitle');
-  const loaderSub     = document.getElementById('loaderSub');
-  const camStatusDot  = document.getElementById('camStatusDot');
-  const camStatusText = document.getElementById('camStatusText');
-  const gestureBadge  = document.getElementById('gestureBadge');
-  const pillDraw      = document.getElementById('pillDraw');
-  const pillWipe      = document.getElementById('pillWipe');
-  const drawSzIn      = document.getElementById('drawSize');
-  const fogDensIn     = document.getElementById('fogDensity');
-  const refogIn       = document.getElementById('refogSpeed');
-  const valDraw       = document.getElementById('valDraw');
-  const valDensity    = document.getElementById('valDensity');
-  const valRefog      = document.getElementById('valRefog');
-  const toast         = document.getElementById('toast');
-  const toastMsg      = document.getElementById('toastMsg');
-  const shutterFlash  = document.getElementById('shutterFlash');
-  const fpsChip       = document.getElementById('fpsChip');
 
+  // DOM elements
+  const videoElem         = document.getElementById('videoElement');
+  const camCanvas         = document.getElementById('camCanvas');
+  const fogCanvas         = document.getElementById('fogCanvas');
+  const handCanvas        = document.getElementById('handCanvas');
+  const uiCanvas          = document.getElementById('uiCanvas');
+  const mirrorChassis     = document.getElementById('mirrorChassis');
+  const loaderOverlay     = document.getElementById('loaderOverlay');
+  const loadHeader        = document.getElementById('loadHeader');
+  const loadDetail        = document.getElementById('loadDetail');
+  const systemStatusDot   = document.getElementById('systemStatusDot');
+  const systemStatusMsg   = document.getElementById('systemStatusMsg');
+  const activeBanner      = document.getElementById('activeBanner');
+  const tabDraw           = document.getElementById('tabDraw');
+  const tabWipe           = document.getElementById('tabWipe');
+  const introGuidance     = document.getElementById('introGuidance');
+  const btnDismissGuide   = document.getElementById('btnDismissGuide');
+  const sliderBrushSize   = document.getElementById('sliderBrushSize');
+  const sliderFogDensity  = document.getElementById('sliderFogDensity');
+  const sliderBrushSoft   = document.getElementById('sliderBrushSoftness');
+  const sliderRefogSpeed  = document.getElementById('sliderRefogSpeed');
+  const valBrushSize      = document.getElementById('valBrushSize');
+  const valFogDensity     = document.getElementById('valFogDensity');
+  const valBrushSoftness  = document.getElementById('valBrushSoftness');
+  const valRefogSpeed     = document.getElementById('valRefogSpeed');
+  const btnUndo           = document.getElementById('btnUndo');
+  const btnClear          = document.getElementById('btnClear');
+  const btnRefogAll       = document.getElementById('btnRefogAll');
+  const btnReset          = document.getElementById('btnReset');
+  const btnToggleDroplets = document.getElementById('btnToggleDroplets');
+  const btnToggleOptics   = document.getElementById('btnToggleOptics');
+  const btnToggleAudio    = document.getElementById('btnToggleAudio');
+  const audioIcon         = document.getElementById('audioIcon');
+  const btnFullscreen     = document.getElementById('btnFullscreen');
+  const btnSnapshot       = document.getElementById('btnSnapshot');
+  const flashOverlay      = document.getElementById('flashOverlay');
+  const toastNotification = document.getElementById('toastNotification');
+  const toastText         = document.getElementById('toastText');
+  const fpsCounter        = document.getElementById('fpsCounter');
+
+  // Canvas contexts
   const camCtx  = camCanvas.getContext('2d');
   const fogCtx  = fogCanvas.getContext('2d');
   const handCtx = handCanvas.getContext('2d');
   const uiCtx   = uiCanvas.getContext('2d');
 
-  // Offscreen canvas for optical sharpness masking (Real Fog Optics)
+  // Offscreen rendering pipeline for optical sharpness masking
   const sharpCanvas = document.createElement('canvas');
   sharpCanvas.width = W; sharpCanvas.height = H;
   const sharpCtx = sharpCanvas.getContext('2d');
@@ -578,152 +766,357 @@
   maskCanvas.width = W; maskCanvas.height = H;
   const maskCtx = maskCanvas.getContext('2d');
 
-  // Slider readout bindings
-  drawSzIn.addEventListener('input', () => valDraw.textContent = `${drawSzIn.value} px`);
-  fogDensIn.addEventListener('input', () => valDensity.textContent = `${Math.round(fogDensIn.value * 100)}%`);
-  refogIn.addEventListener('input', () => valRefog.textContent = `${parseFloat(refogIn.value).toFixed(1)}x`);
+  // Interactive modes: 'DRAW' or 'WIPE'
+  let activeToolMode = 'DRAW';
 
-  // Toast utility
-  let toastTimer = null;
-  function showToast(message) {
-    toastMsg.textContent = message;
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+  // Toggle flags
+  let enableDroplets = true;
+  let enableOptics   = true;
+  let isCameraActive = false;
+
+  // ══════════════════════════════════════════════════════
+  //  ATMOSPHERIC SYNTHESIS (Web Audio API - Optional Sound)
+  // ══════════════════════════════════════════════════════
+  let audioCtx = null;
+  let audioHissNode = null;
+  let audioGainNode = null;
+  let isAudioEnabled = false;
+
+  function initAmbientAudio() {
+    if (audioCtx) return;
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      // Generate soothing continuous white noise stream (steam mist sound)
+      const bufferSize = audioCtx.sampleRate * 2;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        // Pink noise filter approximation
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        output[i] = (b0 + b1 + b2) * 0.028;
+      }
+      audioHissNode = audioCtx.createBufferSource();
+      audioHissNode.buffer = noiseBuffer;
+      audioHissNode.loop = true;
+
+      // Bandpass filter for gentle steam sound
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 850;
+
+      audioGainNode = audioCtx.createGain();
+      audioGainNode.gain.value = 0.0;
+
+      audioHissNode.connect(filter);
+      filter.connect(audioGainNode);
+      audioGainNode.connect(audioCtx.destination);
+      audioHissNode.start();
+    } catch(e) {
+      console.warn("Audio Context init restricted:", e);
+    }
   }
 
-  // ════════════════════════════════════════════════════
-  //  PHOTOREALISTIC CONDENSATION STATE
-  // ════════════════════════════════════════════════════
+  function toggleAudio() {
+    initAmbientAudio();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isAudioEnabled = !isAudioEnabled;
+    btnToggleAudio.classList.toggle('btn-active', isAudioEnabled);
+    if (isAudioEnabled) {
+      audioGainNode.gain.setTargetAtTime(0.08, audioCtx.currentTime, 0.3);
+      audioIcon.innerHTML = `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+      showToastNotification("Ambient steam atmosphere enabled");
+    } else {
+      audioGainNode.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.2);
+      audioIcon.innerHTML = `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`;
+      showToastNotification("Audio muted");
+    }
+  }
+
+  // ══════════════════════════════════════════════════════
+  //  TOAST & FEEDBACK UTILITIES
+  // ══════════════════════════════════════════════════════
+  let toastTimeout = null;
+  function showToastNotification(msg) {
+    toastText.textContent = msg;
+    toastNotification.classList.add('visible');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toastNotification.classList.remove('visible'), 2800);
+  }
+
+  // ══════════════════════════════════════════════════════
+  //  FOG ENGINE STATE & RESTORATION
+  // ══════════════════════════════════════════════════════
   const fogAlpha   = new Float32Array(W * H).fill(1.0);
   const smearAlpha = new Float32Array(W * H).fill(0.0);
 
-  // Fractal micro-droplet noise lookup table
-  const NOISE_SIZE = 256;
-  const NGRID = new Float32Array(NOISE_SIZE * NOISE_SIZE);
-  for(let i=0; i<NGRID.length; i++) NGRID[i] = Math.random();
+  // Undo history buffer (bounded stack of snapshots)
+  const MAX_UNDO_LEVELS = 8;
+  const undoStack = [];
 
-  let noiseT = 0;
-  // Multi-frequency organic condensation noise
-  function sampleSteamNoise(px, py){
-    const i1 = (((px * 0.12 + noiseT * 0.10) | 0) & 255) + ((((py * 0.12) | 0) & 255) << 8);
-    const i2 = (((px * 0.28) | 0) & 255) + ((((py * 0.28 + noiseT * 0.05) | 0) & 255) << 8);
-    return NGRID[i1] * 0.70 + NGRID[i2] * 0.30;
+  function recordUndoSnapshot() {
+    undoStack.push(new Float32Array(fogAlpha));
+    if (undoStack.length > MAX_UNDO_LEVELS) undoStack.shift();
+    btnUndo.disabled = false;
   }
 
-  // ════════════════════════════════════════════════════
-  //  PHYSICAL WATER BEADS & CONDENSATION RUNS
-  // ════════════════════════════════════════════════════
+  function performUndo() {
+    if (undoStack.length === 0) return;
+    const previous = undoStack.pop();
+    fogAlpha.set(previous);
+    smearAlpha.fill(0.0);
+    btnUndo.disabled = (undoStack.length === 0);
+    showToastNotification("Undid previous action");
+  }
+
+  // Multi-frequency fractal steam noise generator
+  const NGRID = new Float32Array(256 * 256);
+  for (let i = 0; i < NGRID.length; i++) NGRID[i] = Math.random();
+
+  let noiseTime = 0;
+  function sampleFractalSteam(px, py) {
+    const i1 = (((px * 0.11 + noiseTime * 0.08) | 0) & 255) + ((((py * 0.11) | 0) & 255) << 8);
+    const i2 = (((px * 0.26) | 0) & 255) + ((((py * 0.26 + noiseTime * 0.04) | 0) & 255) << 8);
+    return NGRID[i1] * 0.72 + NGRID[i2] * 0.28;
+  }
+
+  // Dynamic Condensation Droplets
   const drops = [];
-  function spawnDrop(x, y, sz){
+  function createDroplet(x, y, sz) {
     drops.push({
       x: x ?? (16 + Math.random() * (W - 32)),
       y: y ?? (Math.random() * H * 0.35),
-      r: sz ?? (2.4 + Math.random() * 3.8),
+      r: sz ?? (2.2 + Math.random() * 3.6),
       vy: 0.22 + Math.random() * 0.45,
       wobble: Math.random() * Math.PI * 2,
       trail: []
     });
   }
-  for(let i=0; i<26; i++) spawnDrop();
+  for (let i = 0; i < 24; i++) createDroplet();
 
-  // ════════════════════════════════════════════════════
-  //  OPTICAL RENDER LOOP (Physics-Based Fog Scattering)
-  // ════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════
+  //  NATURAL DRAWING & WIPING STROKES (Interpolated)
+  // ══════════════════════════════════════════════════════
+  function applyBrush(cx, cy, radius, softness, isWipe = false) {
+    const r2 = radius * radius;
+    const x0 = Math.max(0, (cx - radius) | 0);
+    const x1 = Math.min(W - 1, (cx + radius) | 0);
+    const y0 = Math.max(0, (cy - radius) | 0);
+    const y1 = Math.min(H - 1, (cy + radius) | 0);
+    
+    // Softness profile: controls how sharp or feathered the boundary is
+    const exp = 1.0 + (1.0 - softness) * 3.0;
+
+    for (let py = y0; py <= y1; py++) {
+      for (let px = x0; px <= x1; px++) {
+        const dx = px - cx, dy = py - cy;
+        const d2 = dx * dx + dy * dy;
+        if (d2 > r2) continue;
+
+        const normDist = Math.sqrt(d2) / radius;
+        const strokeFalloff = Math.pow(Math.max(0, 1.0 - normDist), exp);
+        const idx = py * W + px;
+        const prev = fogAlpha[idx];
+
+        if (isWipe) {
+          // Palm wipe: broad, slightly more thorough removal with realistic moisture film
+          fogAlpha[idx]   = Math.max(0, prev - strokeFalloff * 0.92);
+          smearAlpha[idx] = Math.max(smearAlpha[idx], strokeFalloff * prev * 0.45);
+        } else {
+          // Precision drawing: crisp carved line with soft edges
+          fogAlpha[idx]   = Math.max(0, prev - strokeFalloff * 0.98);
+          smearAlpha[idx] = Math.max(smearAlpha[idx], strokeFalloff * prev * 0.30);
+        }
+      }
+    }
+  }
+
+  // Smooth stroke interpolation between consecutive points
+  function interpolateStroke(p1, p2, radius, softness, isWipe) {
+    const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    const step = Math.max(2, radius * 0.35);
+    const count = Math.ceil(dist / step);
+    for (let i = 0; i <= count; i++) {
+      const t = count > 0 ? (i / count) : 0;
+      const ix = p1.x + (p2.x - p1.x) * t;
+      const iy = p1.y + (p2.y - p1.y) * t;
+      applyBrush(ix, iy, radius, softness, isWipe);
+    }
+  }
+
+  // ══════════════════════════════════════════════════════
+  //  DYNAMIC TIME-BASED RE-FOGGING ENGINE
+  // ══════════════════════════════════════════════════════
+  const refogSpeedMultipliers = [0.0, 0.0008, 0.0022, 0.0055]; // Off, Slow, Normal, Fast
+  const refogSpeedLabels      = ['Paused (0x)', 'Slow (0.5x)', 'Normal (1.0x)', 'Fast (2.5x)'];
+
+  function updateRefogging(deltaMs) {
+    const speedIndex = parseInt(sliderRefogSpeed.value, 10);
+    const rate = refogSpeedMultipliers[speedIndex];
+    if (rate <= 0) return;
+
+    // Delta time normalized to ~16.6ms (60 fps)
+    const factor = (deltaMs / 16.6) * rate;
+    for (let i = 0; i < fogAlpha.length; i++) {
+      if (fogAlpha[i] < 1.0) {
+        fogAlpha[i]   = Math.min(1.0, fogAlpha[i] + factor);
+        smearAlpha[i] = Math.max(0, smearAlpha[i] - factor * 0.4);
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════════════════
+  //  ATMOSPHERIC STUDIO REFLECTION (Fallback when camera is idle)
+  // ══════════════════════════════════════════════════════
+  const studioReflectionCanvas = document.createElement('canvas');
+  studioReflectionCanvas.width = W; studioReflectionCanvas.height = H;
+  const studioRefCtx = studioReflectionCanvas.getContext('2d');
+
+  function renderAtmosphericStudioReflection() {
+    // Rich interior bathroom / studio lighting reflection
+    const grad = studioRefCtx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0,   '#181c26');
+    grad.addColorStop(0.3, '#2a3344');
+    grad.addColorStop(0.7, '#1b202c');
+    grad.addColorStop(1,   '#0d1118');
+    studioRefCtx.fillStyle = grad;
+    studioRefCtx.fillRect(0, 0, W, H);
+
+    // Warm overhead lighting softbox highlight
+    const lightG = studioRefCtx.createRadialGradient(W * 0.5, H * 0.25, 10, W * 0.5, H * 0.25, W * 0.45);
+    lightG.addColorStop(0, 'rgba(230, 245, 255, 0.16)');
+    lightG.addColorStop(0.6, 'rgba(180, 210, 240, 0.04)');
+    lightG.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    studioRefCtx.fillStyle = lightG;
+    studioRefCtx.fillRect(0, 0, W, H);
+
+    // Subtle silhouette reflection
+    studioRefCtx.fillStyle = 'rgba(10, 14, 20, 0.35)';
+    studioRefCtx.beginPath();
+    studioRefCtx.arc(W * 0.5, H * 0.65, 80, 0, Math.PI * 2);
+    studioRefCtx.fill();
+    studioRefCtx.beginPath();
+    studioRefCtx.arc(W * 0.5, H * 0.95, 140, Math.PI, 0);
+    studioRefCtx.fill();
+  }
+  renderAtmosphericStudioReflection();
+
+  // ══════════════════════════════════════════════════════
+  //  OPTICAL COMPOSITING & RENDER LOOP
+  // ══════════════════════════════════════════════════════
+  let lastTimestamp = performance.now();
   let frameCount = 0;
   let fpsTimer = performance.now();
 
-  function renderLoop(){
-    noiseT += 0.0035;
+  function renderLoop(currentTimestamp) {
+    const deltaMs = Math.min(100, currentTimestamp - lastTimestamp);
+    lastTimestamp = currentTimestamp;
+    noiseTime += 0.0035;
 
-    // Track FPS
+    // Monitor FPS
     frameCount++;
-    const now = performance.now();
-    if(now - fpsTimer >= 1000){
-      const fps = Math.round((frameCount * 1000) / (now - fpsTimer));
-      fpsChip.textContent = `${fps} FPS`;
+    if (currentTimestamp - fpsTimer >= 1000) {
+      const fps = Math.round((frameCount * 1000) / (currentTimestamp - fpsTimer));
+      fpsCounter.textContent = `${fps} FPS`;
       frameCount = 0;
-      fpsTimer = now;
+      fpsTimer = currentTimestamp;
     }
 
-    // ────────────────────────────────────────────────────────
-    // PASS 1: DIFFUSE SCATTERED REFLECTION (Optical Blur)
-    // In real life, steam scatters incoming light rays into a soft haze.
-    // Untouched foggy regions show a natural 16px Gaussian diffusion.
-    // ────────────────────────────────────────────────────────
+    // Dynamic continuous re-fogging update
+    updateRefogging(deltaMs);
+
+    // ──────────────────────────────────────────────────
+    // PASS 1: BACKGROUND REFLECTION (Optically Scattered Blur)
+    // ──────────────────────────────────────────────────
     camCtx.save();
-    camCtx.translate(W, 0); camCtx.scale(-1, 1);
-    camCtx.filter = 'blur(16px) brightness(1.08) saturate(0.82)';
-    camCtx.drawImage(video, 0, 0, W, H);
+    if (isCameraActive && videoElem.readyState >= 2) {
+      camCtx.translate(W, 0); camCtx.scale(-1, 1);
+      if (enableOptics) {
+        camCtx.filter = 'blur(16px) brightness(1.08) saturate(0.82)';
+      }
+      camCtx.drawImage(videoElem, 0, 0, W, H);
+    } else {
+      // Atmospheric mirror reflection
+      if (enableOptics) {
+        camCtx.filter = 'blur(14px) brightness(1.05)';
+      }
+      camCtx.drawImage(studioReflectionCanvas, 0, 0, W, H);
+    }
     camCtx.restore();
 
-    // ────────────────────────────────────────────────────────
-    // PASS 2: CRYSTAL CLEAR SHARP REFLECTION IN WIPED AREAS
-    // Wherever fog is wiped/etched, the razor-sharp reflection shines through!
-    // ────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────
+    // PASS 2: CRYSTAL CLEAR SHARP REFLECTION IN CLEARED REGIONS
+    // ──────────────────────────────────────────────────
     sharpCtx.save();
     sharpCtx.clearRect(0, 0, W, H);
-    sharpCtx.translate(W, 0); sharpCtx.scale(-1, 1);
-    sharpCtx.filter = 'none';
-    sharpCtx.drawImage(video, 0, 0, W, H);
+    if (isCameraActive && videoElem.readyState >= 2) {
+      sharpCtx.translate(W, 0); sharpCtx.scale(-1, 1);
+      sharpCtx.filter = 'none';
+      sharpCtx.drawImage(videoElem, 0, 0, W, H);
+    } else {
+      sharpCtx.filter = 'none';
+      sharpCtx.drawImage(studioReflectionCanvas, 0, 0, W, H);
+    }
     sharpCtx.restore();
 
     // Generate clear alpha mask from (1.0 - fogAlpha)
     const maskImg = maskCtx.createImageData(W, H);
     const md = maskImg.data;
-    for(let i=0; i<W*H; i++){
+    for (let i = 0; i < W * H; i++) {
       const clearVal = 1.0 - fogAlpha[i];
-      // Fast linear ramp with smooth anti-aliased edge
-      md[i*4 + 3] = Math.round(Math.min(1.0, clearVal * 1.6) * 255);
+      md[i * 4 + 3] = Math.round(Math.min(1.0, clearVal * 1.5) * 255);
     }
     maskCtx.putImageData(maskImg, 0, 0);
 
-    // Mask sharp feed and composite over blurred background
+    // Composite razor-sharp reflection over blurred base
     sharpCtx.globalCompositeOperation = 'destination-in';
     sharpCtx.drawImage(maskCanvas, 0, 0);
     sharpCtx.globalCompositeOperation = 'source-over';
     camCtx.drawImage(sharpCanvas, 0, 0);
 
-    // ────────────────────────────────────────────────────────
-    // PASS 3: CONDENSATION DROPLETS, MENISCUS RIM & FROST
-    // ────────────────────────────────────────────────────────
-    const density = parseFloat(fogDensIn.value);
+    // ──────────────────────────────────────────────────
+    // PASS 3: REALISTIC CONDENSATION MIST & FROST LAYER
+    // ──────────────────────────────────────────────────
+    const density = parseFloat(sliderFogDensity.value);
     const img = fogCtx.createImageData(W, H);
     const d = img.data;
 
-    for(let py=0; py<H; py++){
-      for(let px=0; px<W; px++){
+    for (let py = 0; py < H; py++) {
+      for (let px = 0; px < W; px++) {
         const i = py * W + px;
         const a = fogAlpha[i];
-        if(a < 0.003){ d[i*4 + 3] = 0; continue; }
+        if (a < 0.003) { d[i * 4 + 3] = 0; continue; }
 
-        const n = sampleSteamNoise(px, py);
+        const n = sampleFractalSteam(px, py);
 
-        // Natural frosted steam tones with subtle light scattering
+        // Realistic frosted condensation tones
         const r  = (226 + n * 18) | 0;
         const g  = (234 + n * 14) | 0;
         const bv = (244 + n * 8)  | 0;
 
-        // Density modulated by micro-droplet noise
         let fa = Math.min(1.0, a * density * (0.94 + n * 0.08));
 
-        // Wet smear marks (residual oily skin film from wiping)
+        // Wipe residue (thin wet sheen)
         const sm = smearAlpha[i];
-        if(sm > 0.02 && fa > 0.02){
+        if (sm > 0.02 && fa > 0.02) {
           fa = Math.max(fa * 0.015, sm * 0.40);
         }
 
-        d[i*4]     = r;
-        d[i*4 + 1] = g;
-        d[i*4 + 2] = bv;
-        d[i*4 + 3] = Math.round(fa * 255);
+        d[i * 4]     = r;
+        d[i * 4 + 1] = g;
+        d[i * 4 + 2] = bv;
+        d[i * 4 + 3] = Math.round(fa * 255);
       }
     }
     fogCtx.putImageData(img, 0, 0);
 
-    // ────────────────────────────────────────────────────────
-    // PASS 4: SPECULAR GLASS SHEEN & AMBIENT SURFACE MOISTURE
-    // ────────────────────────────────────────────────────────
+    // ──────────────────────────────────────────────────
+    // PASS 4: SPECULAR GLASS SHEEN & AMBIENT MOISTURE
+    // ──────────────────────────────────────────────────
     const sheen = fogCtx.createLinearGradient(0, 0, W * 0.65, H * 0.65);
     sheen.addColorStop(0,    'rgba(255, 255, 255, 0.08)');
     sheen.addColorStop(0.35, 'rgba(215, 235, 255, 0.025)');
@@ -731,37 +1124,39 @@
     fogCtx.fillStyle = sheen;
     fogCtx.fillRect(0, 0, W, H);
 
-    // ────────────────────────────────────────────────────────
-    // PASS 5: PHYSICAL WATER DROPS & GRAVITY RUNS
-    // ────────────────────────────────────────────────────────
-    renderDrops();
+    // ──────────────────────────────────────────────────
+    // PASS 5: PHYSICAL WATER DROPS & GRAVITY TRICKLE TRAILS
+    // ──────────────────────────────────────────────────
+    if (enableDroplets) {
+      renderWaterDroplets();
+    }
 
     requestAnimationFrame(renderLoop);
   }
 
-  // Realistic water drip physics
-  function renderDrops(){
-    if(Math.random() < 0.016) spawnDrop();
+  // Realistic teardrop physics
+  function renderWaterDroplets() {
+    if (Math.random() < 0.015) createDroplet();
 
-    for(let i = drops.length - 1; i >= 0; i--){
+    for (let i = drops.length - 1; i >= 0; i--) {
       const dr = drops[i];
       dr.trail.push({ x: dr.x, y: dr.y });
-      if(dr.trail.length > 24) dr.trail.shift();
+      if (dr.trail.length > 24) dr.trail.shift();
 
       dr.wobble += 0.08;
       dr.y += dr.vy;
       dr.vy += 0.012; // gravity acceleration
-      dr.x += Math.sin(dr.wobble) * 0.32; // natural meandering drip
+      dr.x += Math.sin(dr.wobble) * 0.32; // natural meandering
 
-      // Realistic trickle: droplet carves a clear moisture trail through the fog
+      // Clear away trail in fogAlpha
       const cx = dr.x | 0, cy = dr.y | 0;
       const fi = Math.min(W * H - 1, Math.max(0, cy * W + cx));
-      if(fogAlpha[fi] > 0.12){
+      if (fogAlpha[fi] > 0.12) {
         const trR = (dr.r * 0.72) | 0;
-        for(let dy = -trR; dy <= trR; dy++){
-          for(let dx = -trR; dx <= trR; dx++){
+        for (let dy = -trR; dy <= trR; dy++) {
+          for (let dx = -trR; dx <= trR; dx++) {
             const pxi = cx + dx, pyi = cy + dy;
-            if(pxi >= 0 && pxi < W && pyi >= 0 && pyi < H){
+            if (pxi >= 0 && pxi < W && pyi >= 0 && pyi < H) {
               const pi = pyi * W + pxi;
               fogAlpha[pi] = Math.max(0.02, fogAlpha[pi] - 0.10);
             }
@@ -769,13 +1164,13 @@
         }
       }
 
-      if(dr.y > H + 12 || (fogAlpha[fi] < 0.05 && dr.y > 60)){
+      if (dr.y > H + 14 || (fogAlpha[fi] < 0.05 && dr.y > 60)) {
         drops.splice(i, 1);
         continue;
       }
 
-      // Draw glossy water trail
-      if(dr.trail.length > 2){
+      // Draw water track line
+      if (dr.trail.length > 2) {
         fogCtx.beginPath();
         fogCtx.strokeStyle = 'rgba(185, 225, 255, 0.38)';
         fogCtx.lineWidth = dr.r * 0.78;
@@ -785,7 +1180,7 @@
         fogCtx.stroke();
       }
 
-      // Glistening water bead with realistic refraction highlight
+      // Glistening bead
       const g = fogCtx.createRadialGradient(
         dr.x - dr.r * 0.32, dr.y - dr.r * 0.36, 0,
         dr.x, dr.y, dr.r
@@ -801,118 +1196,103 @@
     }
   }
 
-  // ════════════════════════════════════════════════════
-  //  RE-FOG ACCUMULATOR
-  // ════════════════════════════════════════════════════
-  let refogTimer = null;
-  function scheduleRefog(){
-    if(refogTimer) return;
-    refogTimer = setInterval(() => {
-      const spd = parseFloat(refogIn.value);
-      if(spd === 0) return;
-      const inc = spd * 0.0025;
-      let any = false;
-      for(let i=0; i<fogAlpha.length; i++){
-        if(fogAlpha[i] < 1.0){
-          fogAlpha[i]   = Math.min(1.0, fogAlpha[i] + inc);
-          smearAlpha[i] = Math.max(0, smearAlpha[i] - inc * 0.35);
-          any = true;
-        }
-      }
-      if(!any){ clearInterval(refogTimer); refogTimer = null; }
-    }, 30);
+  // ══════════════════════════════════════════════════════
+  //  POINTER INPUTS: MOUSE, TOUCH & STYLUS (Smooth Drawing)
+  // ══════════════════════════════════════════════════════
+  let isPointerDown = false;
+  let lastPointerPos = null;
+
+  function getCanvasCoords(e) {
+    const rect = mirrorChassis.getBoundingClientRect();
+    return {
+      x: (e.clientX - rect.left) * (W / rect.width),
+      y: (e.clientY - rect.top) * (H / rect.height)
+    };
   }
 
-  // ════════════════════════════════════════════════════
-  //  ☝️  FINGERTIP DRAWING
-  // ════════════════════════════════════════════════════
-  function drawOnFog(cx, cy){
-    const r = parseInt(drawSzIn.value), r2 = r * r;
-    const x0 = Math.max(0, cx - r | 0), x1 = Math.min(W - 1, cx + r | 0);
-    const y0 = Math.max(0, cy - r | 0), y1 = Math.min(H - 1, cy + r | 0);
-    for(let py = y0; py <= y1; py++){
-      for(let px = x0; px <= x1; px++){
-        const dx = px - cx, dy = py - cy, d2 = dx * dx + dy * dy;
-        if(d2 > r2) continue;
-        const sm = (1 - d2 / r2) ** 3;
-        const i = py * W + px, prev = fogAlpha[i];
-        fogAlpha[i]   = Math.max(0, prev - sm * 0.98);
-        smearAlpha[i] = Math.max(smearAlpha[i], sm * prev * 0.35);
-      }
+  mirrorChassis.addEventListener('pointerdown', (e) => {
+    isPointerDown = true;
+    mirrorChassis.setPointerCapture(e.pointerId);
+    recordUndoSnapshot(); // Record state before stroke starts
+
+    const pos = getCanvasCoords(e);
+    lastPointerPos = pos;
+
+    const baseRadius = parseInt(sliderBrushSize.value, 10);
+    const radius = activeToolMode === 'WIPE' ? baseRadius * 2.4 : baseRadius;
+    const softness = parseFloat(sliderBrushSoft.value);
+    applyBrush(pos.x, pos.y, radius, softness, activeToolMode === 'WIPE');
+  });
+
+  mirrorChassis.addEventListener('pointermove', (e) => {
+    if (!isPointerDown) return;
+    const pos = getCanvasCoords(e);
+
+    const baseRadius = parseInt(sliderBrushSize.value, 10);
+    const radius = activeToolMode === 'WIPE' ? baseRadius * 2.4 : baseRadius;
+    const softness = parseFloat(sliderBrushSoft.value);
+
+    if (lastPointerPos) {
+      interpolateStroke(lastPointerPos, pos, radius, softness, activeToolMode === 'WIPE');
+    } else {
+      applyBrush(pos.x, pos.y, radius, softness, activeToolMode === 'WIPE');
     }
-    scheduleRefog();
+    lastPointerPos = pos;
+  });
+
+  function endPointerStroke(e) {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    lastPointerPos = null;
+    try {
+      mirrorChassis.releasePointerCapture(e.pointerId);
+    } catch(err) {}
   }
 
-  // ════════════════════════════════════════════════════
-  //  🖐  PALM WIPE
-  // ════════════════════════════════════════════════════
-  function wipePalm(cx, cy, rx, ry, angle){
-    const cosA = Math.cos(-angle), sinA = Math.sin(-angle);
-    const pad  = Math.max(rx, ry) + 4;
-    const x0 = Math.max(0, (cx - pad) | 0), x1 = Math.min(W - 1, (cx + pad) | 0);
-    const y0 = Math.max(0, (cy - pad) | 0), y1 = Math.min(H - 1, (cy + pad) | 0);
-    for(let py = y0; py <= y1; py++){
-      for(let px = x0; px <= x1; px++){
-        const dx = px - cx, dy = py - cy;
-        const lx = dx * cosA - dy * sinA, ly = dx * sinA + dy * cosA;
-        const t  = (lx / rx) ** 2 + (ly / ry) ** 2;
-        if(t > 1) continue;
-        const str = (1 - t) ** 2;
-        const i = py * W + px, prev = fogAlpha[i];
-        fogAlpha[i]   = Math.max(0, prev - str * 0.92);
-        smearAlpha[i] = Math.max(smearAlpha[i], str * prev * 0.45);
-      }
-    }
-    scheduleRefog();
-  }
+  mirrorChassis.addEventListener('pointerup', endPointerStroke);
+  mirrorChassis.addEventListener('pointercancel', endPointerStroke);
 
-  // ════════════════════════════════════════════════════
-  //  GESTURE CLASSIFIER
-  // ════════════════════════════════════════════════════
-  function ext(lm, tip, pip){ return lm[tip].y < lm[pip].y - 0.02; }
-  function classifyHand(lm){
-    const i = ext(lm, 8, 6),   m = ext(lm, 12, 10);
-    const r = ext(lm, 16, 14), p = ext(lm, 20, 18);
-    if( i && !m && !r && !p) return 'DRAW';
-    if( i &&  m &&  r &&  p) return 'WIPE';
-    return 'NONE';
-  }
-
-  // ════════════════════════════════════════════════════
-  //  UI FEEDBACK & SKELETON OVERLAY
-  // ════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════
+  //  MEDIAPIPE COMPUTER VISION: HAND GESTURES
+  // ══════════════════════════════════════════════════════
   const TIPS  = [4, 8, 12, 16, 20];
   const BONES = [
     [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
     [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
     [13,17],[0,17],[17,18],[18,19],[19,20]
   ];
-  const PALM_IDS   = [0, 1, 5, 9, 13, 17];
-  const MIN_WIPE   = 3.0, MIN_DRAW = 0.5;
-  let prevPalm     = null, prevFinger = null;
-  let currentGesture = 'NONE';
+  const PALM_IDS = [0, 1, 5, 9, 13, 17];
+  let prevPalm = null, prevFinger = null;
 
-  function lmPt(lm, i){ return { x: (1 - lm[i].x) * W, y: lm[i].y * H }; }
+  function lmPt(lm, i) { return { x: (1 - lm[i].x) * W, y: lm[i].y * H }; }
+  function isFingerExt(lm, tip, pip) { return lm[tip].y < lm[pip].y - 0.02; }
 
-  function setGestureUI(g){
-    currentGesture = g;
-    pillDraw.classList.toggle('active-draw', g === 'DRAW');
-    pillWipe.classList.toggle('active-wipe', g === 'WIPE');
+  function classifyHandGesture(lm) {
+    const idx = isFingerExt(lm, 8, 6);
+    const mid = isFingerExt(lm, 12, 10);
+    const rng = isFingerExt(lm, 16, 14);
+    const pnk = isFingerExt(lm, 20, 18);
 
-    if(g === 'DRAW'){
-      gestureBadge.textContent = '☝️ Drawing on Glass';
-      gestureBadge.className = 'show badge-draw';
-    } else if(g === 'WIPE'){
-      gestureBadge.textContent = '🖐 Surface Wipe Active';
-      gestureBadge.className = 'show badge-wipe';
+    if (idx && !mid && !rng && !pnk) return 'DRAW';
+    if (idx &&  mid &&  rng &&  pnk) return 'WIPE';
+    return 'NONE';
+  }
+
+  function updateHUDGestureIndicator(gesture) {
+    if (gesture === 'DRAW') {
+      activeBanner.textContent = '☝️ Point to Draw';
+      activeBanner.className = 'visible style-draw';
+    } else if (gesture === 'WIPE') {
+      activeBanner.textContent = '🖐 Surface Wipe';
+      activeBanner.className = 'visible style-wipe';
     } else {
-      gestureBadge.className = '';
+      activeBanner.className = '';
     }
   }
 
-  function drawSkeleton(lm, gesture){
+  function renderHandSkeleton(lm, gesture) {
     const boneClr = gesture === 'DRAW' ? 'rgba(251, 191, 36, 0.55)'
-                  : gesture === 'WIPE' ? 'rgba(96, 165, 250, 0.50)'
+                  : gesture === 'WIPE' ? 'rgba(56, 189, 248, 0.50)'
                   : 'rgba(148, 163, 184, 0.30)';
     const tipClr  = gesture === 'DRAW' ? 'rgba(254, 240, 138, 0.98)'
                   : gesture === 'WIPE' ? 'rgba(186, 230, 253, 0.98)'
@@ -924,7 +1304,7 @@
       const pa = lmPt(lm, a), pb = lmPt(lm, b);
       handCtx.beginPath(); handCtx.moveTo(pa.x, pa.y); handCtx.lineTo(pb.x, pb.y); handCtx.stroke();
     });
-    for(let i=0; i<21; i++){
+    for (let i = 0; i < 21; i++) {
       const p = lmPt(lm, i), r = TIPS.includes(i) ? 5.0 : 2.5;
       handCtx.beginPath(); handCtx.arc(p.x, p.y, r, 0, Math.PI * 2);
       handCtx.fillStyle = TIPS.includes(i) ? tipClr : boneClr.replace('0.55','0.8').replace('0.50','0.8').replace('0.30','0.6');
@@ -933,8 +1313,8 @@
     handCtx.restore();
   }
 
-  function drawFingertipCursor(x, y){
-    const r = parseInt(drawSzIn.value);
+  function renderFingertipCursor(x, y) {
+    const r = parseInt(sliderBrushSize.value, 10);
     uiCtx.save();
     const g = uiCtx.createRadialGradient(x, y, 0, x, y, r + 10);
     g.addColorStop(0, 'rgba(251, 191, 36, 0.45)');
@@ -949,53 +1329,49 @@
     uiCtx.restore();
   }
 
-  // ════════════════════════════════════════════════════
-  //  MEDIAPIPE RESULTS
-  // ════════════════════════════════════════════════════
-  function onHandResults(res){
+  function onHandResults(results) {
     handCtx.clearRect(0, 0, W, H);
     uiCtx.clearRect(0, 0, W, H);
 
-    if(!res.multiHandLandmarks?.length){
-      setGestureUI('NONE');
+    if (!results.multiHandLandmarks?.length) {
+      updateHUDGestureIndicator('NONE');
       prevPalm = null; prevFinger = null;
-      camStatusDot.classList.add('active');
-      camStatusText.textContent = 'Camera Ready';
+      systemStatusDot.classList.add('active');
+      systemStatusMsg.textContent = 'Vision Ready';
       return;
     }
 
-    camStatusDot.classList.add('active');
-    camStatusText.textContent = 'Tracking Active';
+    systemStatusDot.classList.add('active');
+    systemStatusMsg.textContent = 'Hand Tracked';
 
-    const lm = res.multiHandLandmarks[0];
-    const gesture = classifyHand(lm);
-    setGestureUI(gesture);
-    drawSkeleton(lm, gesture);
+    const lm = results.multiHandLandmarks[0];
+    const gesture = classifyHandGesture(lm);
+    updateHUDGestureIndicator(gesture);
+    renderHandSkeleton(lm, gesture);
 
     const pts = PALM_IDS.map(i => lmPt(lm, i));
     const pcx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
     const pcy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
-    const tip = lmPt(lm, 8);
+    const tip = lmPt(lm, 8); // index fingertip
 
-    if(gesture === 'DRAW'){
-      drawFingertipCursor(tip.x, tip.y);
+    const baseRadius = parseInt(sliderBrushSize.value, 10);
+    const softness = parseFloat(sliderBrushSoft.value);
+
+    if (gesture === 'DRAW') {
+      renderFingertipCursor(tip.x, tip.y);
       const vel = prevFinger ? Math.hypot(tip.x - prevFinger.x, tip.y - prevFinger.y) : 99;
-      if(vel > MIN_DRAW){
-        drawOnFog(tip.x, tip.y);
-        if(prevFinger && vel > 3){
-          const steps = Math.ceil(vel / parseInt(drawSzIn.value) * 1.5);
-          for(let s = 1; s < steps; s++){
-            drawOnFog(
-              prevFinger.x + (tip.x - prevFinger.x) * s / steps,
-              prevFinger.y + (tip.y - prevFinger.y) * s / steps
-            );
-          }
+      if (vel > 0.5) {
+        if (!prevFinger) recordUndoSnapshot();
+        if (prevFinger && vel > 3) {
+          interpolateStroke(prevFinger, tip, baseRadius, softness, false);
+        } else {
+          applyBrush(tip.x, tip.y, baseRadius, softness, false);
         }
       }
       prevFinger = { x: tip.x, y: tip.y };
-      prevPalm   = null;
+      prevPalm = null;
 
-    } else if(gesture === 'WIPE'){
+    } else if (gesture === 'WIPE') {
       prevFinger = null;
       const wrist = lmPt(lm, 0), mid = lmPt(lm, 9);
       const pLen  = Math.hypot(mid.x - wrist.x, mid.y - wrist.y);
@@ -1003,20 +1379,12 @@
       const rx = pLen * 0.78, ry = pLen * 0.56;
       const vel = prevPalm ? Math.hypot(pcx - prevPalm.x, pcy - prevPalm.y) : 0;
 
-      if(vel > MIN_WIPE || !prevPalm){
-        wipePalm(pcx, pcy, rx, ry, angle);
-        if(prevPalm && vel > 5){
-          const steps = Math.ceil(vel / (rx * 0.45));
-          for(let s = 1; s < steps; s++){
-            wipePalm(
-              prevPalm.x + (pcx - prevPalm.x) * s / steps,
-              prevPalm.y + (pcy - prevPalm.y) * s / steps,
-              rx, ry, angle
-            );
-          }
-        }
+      if (vel > 3.0 || !prevPalm) {
+        if (!prevPalm) recordUndoSnapshot();
+        applyBrush(pcx, pcy, rx, softness, true);
       }
 
+      // Dashed palm ellipse
       handCtx.save();
       handCtx.translate(pcx, pcy); handCtx.rotate(angle);
       handCtx.setLineDash([4, 6]);
@@ -1031,58 +1399,160 @@
     }
   }
 
-  // ════════════════════════════════════════════════════
-  //  ACTIONS: RESET & SNAPSHOT
-  // ════════════════════════════════════════════════════
-  document.getElementById('clearBtn').addEventListener('click', () => {
+  // ══════════════════════════════════════════════════════
+  //  UI CONTROLS & EVENT BINDINGS
+  // ══════════════════════════════════════════════════════
+  // Switch to Draw Mode
+  tabDraw.addEventListener('click', () => {
+    activeToolMode = 'DRAW';
+    tabDraw.classList.add('active-draw');
+    tabWipe.classList.remove('active-wipe');
+    showToastNotification("Draw mode active: Thin precision stroke");
+  });
+
+  // Switch to Wipe Mode
+  tabWipe.addEventListener('click', () => {
+    activeToolMode = 'WIPE';
+    tabWipe.classList.add('active-wipe');
+    tabDraw.classList.remove('active-draw');
+    showToastNotification("Wipe mode active: Broad palm surface wipe");
+  });
+
+  // Slider readouts
+  sliderBrushSize.addEventListener('input', () => {
+    valBrushSize.textContent = `${sliderBrushSize.value} px`;
+  });
+  sliderFogDensity.addEventListener('input', () => {
+    valFogDensity.textContent = `${Math.round(sliderFogDensity.value * 100)}%`;
+  });
+  sliderBrushSoft.addEventListener('input', () => {
+    valBrushSoftness.textContent = `${Math.round(sliderBrushSoft.value * 100)}%`;
+  });
+  sliderRefogSpeed.addEventListener('input', () => {
+    const idx = parseInt(sliderRefogSpeed.value, 10);
+    valRefogSpeed.textContent = refogSpeedLabels[idx];
+  });
+
+  // Action Buttons
+  btnUndo.addEventListener('click', performUndo);
+
+  // Keyboard shortcut for Undo (Ctrl+Z or Cmd+Z)
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      performUndo();
+    }
+    if (e.key.toLowerCase() === 'f') {
+      toggleFullscreen();
+    }
+  });
+
+  // Clear Mirror (wipe away all fog)
+  btnClear.addEventListener('click', () => {
+    recordUndoSnapshot();
+    fogAlpha.fill(0.0);
+    smearAlpha.fill(0.0);
+    showToastNotification("Mirror surface cleared completely");
+  });
+
+  // Re-fog All (restore complete condensation)
+  btnRefogAll.addEventListener('click', () => {
+    recordUndoSnapshot();
     fogAlpha.fill(1.0);
     smearAlpha.fill(0.0);
-    if(refogTimer){ clearInterval(refogTimer); refogTimer = null; }
-    showToast('Mirror surface completely re-fogged');
+    showToastNotification("Condensation fully restored across mirror");
   });
 
-  document.getElementById('snapBtn').addEventListener('click', () => {
-    shutterFlash.style.opacity = '0.9';
-    setTimeout(() => shutterFlash.style.opacity = '0', 200);
-
-    const m = document.createElement('canvas'); m.width = W; m.height = H;
-    const mc = m.getContext('2d');
-    mc.drawImage(camCanvas, 0, 0);
-    mc.drawImage(fogCanvas, 0, 0);
-    mc.drawImage(handCanvas, 0, 0);
-
-    const a = document.createElement('a');
-    a.download = `mist-studio-${Date.now()}.png`;
-    a.href = m.toDataURL('image/png');
-    a.click();
-
-    showToast('Snapshot saved to Downloads');
+  // Reset to default
+  btnReset.addEventListener('click', () => {
+    recordUndoSnapshot();
+    fogAlpha.fill(1.0);
+    smearAlpha.fill(0.0);
+    sliderBrushSize.value = 12;
+    valBrushSize.textContent = '12 px';
+    sliderFogDensity.value = 0.98;
+    valFogDensity.textContent = '98%';
+    sliderBrushSoft.value = 0.80;
+    valBrushSoftness.textContent = '80%';
+    sliderRefogSpeed.value = 2;
+    valRefogSpeed.textContent = 'Normal (1.0x)';
+    showToastNotification("All parameters reset to default");
   });
 
-  // Touch fallback for phones / tablets
-  let isTouching = false;
-  glassWrap.addEventListener('pointerdown', (e) => {
-    isTouching = true;
-    const rect = glassWrap.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (W / rect.width);
-    const y = (e.clientY - rect.top) * (H / rect.height);
-    drawOnFog(x, y);
+  // Toggle Droplets
+  btnToggleDroplets.addEventListener('click', () => {
+    enableDroplets = !enableDroplets;
+    btnToggleDroplets.classList.toggle('btn-active', enableDroplets);
+    showToastNotification(enableDroplets ? "Water condensation droplets enabled" : "Water droplets hidden");
   });
-  window.addEventListener('pointermove', (e) => {
-    if(!isTouching) return;
-    const rect = glassWrap.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (W / rect.width);
-    const y = (e.clientY - rect.top) * (H / rect.height);
-    drawOnFog(x, y);
-  });
-  window.addEventListener('pointerup', () => isTouching = false);
 
-  // ════════════════════════════════════════════════════
-  //  BOOT & INITIALIZATION
-  // ════════════════════════════════════════════════════
-  function startStudio(){
-    loaderTitle.textContent = 'Loading Vision Engine';
-    loaderSub.textContent = 'Loading MediaPipe hand landmarks…';
+  // Toggle Optical Scattering Blur
+  btnToggleOptics.addEventListener('click', () => {
+    enableOptics = !enableOptics;
+    btnToggleOptics.classList.toggle('btn-active', enableOptics);
+    showToastNotification(enableOptics ? "Optical light scattering enabled" : "Optical blur disabled");
+  });
+
+  // Toggle Audio
+  btnToggleAudio.addEventListener('click', toggleAudio);
+
+  // Fullscreen Mode
+  function toggleFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (mirrorChassis.requestFullscreen) {
+        mirrorChassis.requestFullscreen();
+      } else if (mirrorChassis.webkitRequestFullscreen) {
+        mirrorChassis.webkitRequestFullscreen();
+      }
+      btnFullscreen.classList.add('btn-active');
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+      btnFullscreen.classList.remove('btn-active');
+    }
+  }
+  btnFullscreen.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', () => {
+    btnFullscreen.classList.toggle('btn-active', !!document.fullscreenElement);
+  });
+
+  // Snapshot / Export PNG (Combines all mirror layers accurately)
+  btnSnapshot.addEventListener('click', () => {
+    // Optical shutter flash
+    flashOverlay.style.opacity = '0.9';
+    setTimeout(() => flashOverlay.style.opacity = '0', 200);
+
+    // Export canvas: composites camCanvas + fogCanvas
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = W; exportCanvas.height = H;
+    const expCtx = exportCanvas.getContext('2d');
+
+    // Combine mirror layers
+    expCtx.drawImage(camCanvas, 0, 0);
+    expCtx.drawImage(fogCanvas, 0, 0);
+
+    const link = document.createElement('a');
+    link.download = `foggy-mirror-snapshot-${Date.now()}.png`;
+    link.href = exportCanvas.toDataURL('image/png');
+    link.click();
+
+    showToastNotification("Snapshot exported as foggy-mirror-snapshot.png");
+  });
+
+  // Dismiss guide banner
+  btnDismissGuide.addEventListener('click', () => {
+    introGuidance.classList.add('closed');
+  });
+
+  // ══════════════════════════════════════════════════════
+  //  ENGINE STARTUP & CAMERA INITIALIZATION
+  // ══════════════════════════════════════════════════════
+  function startEngine() {
+    loadHeader.textContent = "Calibrating Vision Tracking";
+    loadDetail.textContent = "Connecting MediaPipe hand landmarks…";
 
     const hands = new Hands({
       locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
@@ -1090,18 +1560,18 @@
     hands.setOptions({
       maxNumHands: 1,
       modelComplexity: 1,
-      minDetectionConfidence: 0.72,
-      minTrackingConfidence: 0.62
+      minDetectionConfidence: 0.70,
+      minTrackingConfidence: 0.60
     });
     hands.onResults(onHandResults);
 
     let isProcessing = false;
-    const cam = new Camera(video, {
+    const camera = new Camera(videoElem, {
       onFrame: async () => {
-        if(isProcessing) return;
+        if (isProcessing) return;
         isProcessing = true;
         try {
-          await hands.send({ image: video });
+          await hands.send({ image: videoElem });
         } finally {
           isProcessing = false;
         }
@@ -1109,33 +1579,51 @@
       width: W, height: H
     });
 
-    cam.start().then(() => {
-      setTimeout(() => loader.classList.add('gone'), 1200);
-      camStatusDot.classList.add('active');
-      camStatusText.textContent = 'Camera Ready';
+    camera.start().then(() => {
+      isCameraActive = true;
+      setTimeout(() => loaderOverlay.classList.add('hidden'), 900);
+      systemStatusDot.classList.add('active');
+      systemStatusMsg.textContent = 'Studio Vision Active';
       requestAnimationFrame(renderLoop);
     }).catch(err => {
-      loaderTitle.textContent = 'Camera Error';
-      loaderSub.textContent = err.message;
-      camStatusText.textContent = 'Permission Denied';
+      console.warn("Camera init failed, switching to Atmospheric Mirror mode:", err);
+      // Fallback cleanly to atmospheric studio mirror mode
+      isCameraActive = false;
+      setTimeout(() => loaderOverlay.classList.add('hidden'), 500);
+      systemStatusDot.classList.add('active');
+      systemStatusMsg.textContent = 'Atmospheric Mirror Mode';
+      showToastNotification("Camera unavailable — Atmospheric reflection mode active");
+      requestAnimationFrame(renderLoop);
     });
   }
 
-  // Camera stream boot
-  navigator.mediaDevices.getUserMedia({
-    video: { width: W, height: H, facingMode: 'user' },
-    audio: false
-  })
-  .then(stream => {
-    video.srcObject = stream;
-    video.play();
-    startStudio();
-  })
-  .catch(err => {
-    loaderTitle.textContent = 'Camera Access Required';
-    loaderSub.textContent = 'Please enable webcam access in browser settings.';
-    camStatusText.textContent = 'Camera Blocked';
-  });
+  // Request webcam access gracefully
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({
+      video: { width: W, height: H, facingMode: 'user' },
+      audio: false
+    })
+    .then(stream => {
+      videoElem.srcObject = stream;
+      videoElem.play();
+      startEngine();
+    })
+    .catch(err => {
+      console.warn("Camera permission denied, using atmospheric mirror:", err);
+      isCameraActive = false;
+      setTimeout(() => loaderOverlay.classList.add('hidden'), 500);
+      systemStatusDot.classList.add('active');
+      systemStatusMsg.textContent = 'Atmospheric Mirror Mode';
+      requestAnimationFrame(renderLoop);
+    });
+  } else {
+    // Non-webcam browsers fallback
+    isCameraActive = false;
+    setTimeout(() => loaderOverlay.classList.add('hidden'), 500);
+    systemStatusDot.classList.add('active');
+    systemStatusMsg.textContent = 'Atmospheric Mirror Mode';
+    requestAnimationFrame(renderLoop);
+  }
   </script>
 </body>
 </html>
