@@ -2,663 +2,1133 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Foggy Mirror</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>MIST • Studio Glass</title>
 
-  <!-- MediaPipe: Hands only (fast, lightweight, smooth 60fps) - v2.1 Clean Layout -->
+  <!-- Anti-cache meta -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
   <meta http-equiv="Pragma" content="no-cache"/>
   <meta http-equiv="Expires" content="0"/>
+
+  <!-- Google Fonts: Inter Display & Text -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- MediaPipe: Hands tracking -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    /* ══════════════════════════════════════════════════
+       DESIGN SYSTEM • Apple / Spotify Studio Dark Palette
+       ══════════════════════════════════════════════════ */
+    :root {
+      --bg-base: #08090c;
+      --bg-surface: rgba(18, 20, 26, 0.75);
+      --bg-surface-elevated: rgba(28, 31, 40, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(255, 255, 255, 0.14);
+      --border-accent: rgba(142, 197, 252, 0.35);
+      
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --accent-blue: #60a5fa;
+      --accent-warm: #fbbf24;
+      --accent-emerald: #34d399;
+      
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.6);
+      --shadow-lg: 0 20px 60px -15px rgba(0, 0, 0, 0.85);
+      --shadow-glass: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+
+    *, *::before, *::after {
+      margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
 
     body {
-      background: #090a0d;
+      background: var(--bg-base);
+      background-image:
+        radial-gradient(ellipse 60% 40% at 50% -10%, rgba(56, 110, 180, 0.12), transparent 70%),
+        radial-gradient(circle at 85% 85%, rgba(120, 140, 180, 0.04), transparent 50%);
       min-height: 100vh;
       display: flex; flex-direction: column;
+      align-items: center; justify-content: space-between;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text-primary);
+      padding: 18px 24px 20px;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%; max-width: 960px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 18px;
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      z-index: 30;
+      transition: all 0.3s ease;
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .brand-mark {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.03));
+      border: 1px solid var(--border-highlight);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent-blue);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .brand-mark svg { width: 15px; height: 15px; fill: currentColor; }
+    
+    .brand-name {
+      font-size: 0.88rem; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: #ffffff;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .brand-badge {
+      font-size: 0.60rem; font-weight: 600;
+      letter-spacing: 0.8px; text-transform: uppercase;
+      background: rgba(96, 165, 250, 0.12);
+      border: 1px solid rgba(96, 165, 250, 0.28);
+      color: var(--accent-blue);
+      padding: 2px 7px; border-radius: 6px;
+    }
+
+    .header-status {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.72rem; color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #475569;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .status-dot.active {
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px rgba(52, 211, 153, 0.7);
+    }
+
+    .header-pills {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .mode-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.67rem; font-weight: 600; letter-spacing: 0.6px; text-transform: uppercase;
+      padding: 5px 12px; border-radius: 20px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-muted);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mode-pill svg { width: 13px; height: 13px; fill: currentColor; opacity: 0.7; }
+    .mode-pill.active-draw {
+      color: #fef08a;
+      background: rgba(251, 191, 36, 0.12);
+      border-color: rgba(251, 191, 36, 0.45);
+      box-shadow: 0 0 14px rgba(251, 191, 36, 0.2);
+    }
+    .mode-pill.active-wipe {
+      color: #bae6fd;
+      background: rgba(96, 165, 250, 0.12);
+      border-color: rgba(96, 165, 250, 0.45);
+      box-shadow: 0 0 14px rgba(96, 165, 250, 0.2);
+    }
+
+    /* ── Main Mirror Viewport ── */
+    main {
+      width: 100%; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      font-family: 'Inter', sans-serif;
-      color: #dde8f2; overflow: hidden; gap: 14px;
+      margin: auto 0;
+      padding: 10px 0;
     }
 
-    /* ── Top bar ── */
-    .topbar { display:flex; align-items:center; gap:20px; }
-    .logo {
-      font-size:.88rem; font-weight:500;
-      letter-spacing:4px; text-transform:uppercase; color:#8ec5fc;
-      text-shadow: 0 0 12px rgba(142,197,252,0.3);
-    }
-    .gpills { display:flex; gap:8px; align-items:center; }
-    .gpill {
-      display:flex; align-items:center; gap:6px;
-      font-size:.65rem; font-weight:500; letter-spacing:1px; text-transform:uppercase;
-      padding:5px 14px; border-radius:20px;
-      border:1px solid rgba(255,255,255,.1);
-      color:rgba(255,255,255,.3); background:rgba(255,255,255,0.02);
-      transition:all .25s ease; user-select:none;
-    }
-    .gpill .icon { font-size:.92rem; }
-    .gpill.draw-on {
-      color:#ffe0b2; border-color:rgba(255,190,100,.65);
-      background:rgba(255,180,80,.14);
-      box-shadow:0 0 16px rgba(255,180,80,.28);
-    }
-    .gpill.wipe-on {
-      color:#a0dcff; border-color:rgba(100,195,255,.65);
-      background:rgba(80,175,255,.14);
-      box-shadow:0 0 16px rgba(80,175,255,.28);
+    .glass-chassis {
+      position: relative;
+      width: 640px; height: 480px;
+      max-width: 95vw;
+      aspect-ratio: 4/3;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      background: #030406;
+      border: 1px solid var(--border-highlight);
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.8),
+        var(--shadow-lg),
+        inset 0 1px 1px rgba(255, 255, 255, 0.14);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* ── Canvas stack ── */
-    #wrap {
-      position:relative; border-radius:16px; overflow:hidden;
-      box-shadow:0 0 0 1px rgba(255,255,255,.1), 0 14px 90px rgba(0,0,0,.92);
-      background: #000;
+    .glass-chassis canvas {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
     }
-    #wrap canvas { display:block; width:640px; height:480px; }
-    #camCanvas  { position:relative; }
-    #fogCanvas, #handCanvas, #uiCanvas {
-      position:absolute; top:0; left:0; pointer-events:none;
+    #camCanvas  { z-index: 1; }
+    #fogCanvas  { z-index: 2; pointer-events: none; }
+    #handCanvas { z-index: 3; pointer-events: none; }
+    #uiCanvas   { z-index: 4; pointer-events: none; }
+
+    /* Minimal Viewport HUD */
+    .hud-overlay {
+      position: absolute; inset: 0;
+      z-index: 10; pointer-events: none;
+      display: flex; flex-direction: column;
+      justify-content: space-between;
+      padding: 14px 16px;
     }
 
-    /* ── Gesture label (top centre) ── */
-    #gLabel {
-      position:absolute; top:14px; left:50%; transform:translateX(-50%);
-      font-size:.65rem; font-weight:500; letter-spacing:2px; text-transform:uppercase;
-      padding:5px 16px; border-radius:20px;
-      opacity:0; transition:opacity .25s;
-      pointer-events:none; z-index:20; white-space:nowrap;
+    .hud-top {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%;
     }
-    #gLabel.draw {
-      opacity:1; color:#ffe0b2;
-      background:rgba(10,12,18,.75); border:1px solid rgba(255,190,100,.45);
-      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
-    }
-    #gLabel.wipe {
-      opacity:1; color:#a0dcff;
-      background:rgba(10,12,18,.75); border:1px solid rgba(100,195,255,.45);
-      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+    .hud-chip {
+      background: rgba(10, 12, 16, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 0.65rem; font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 6px;
     }
 
-    /* ── Guide (bottom) ── */
-    #guide {
-      position:absolute; bottom:0; left:0; right:0;
-      padding:30px 20px 14px;
-      background:linear-gradient(transparent,rgba(5,6,9,.75));
-      display:flex; justify-content:center; gap:40px;
-      pointer-events:none; z-index:5;
+    /* Gesture floating notification banner */
+    #gestureBadge {
+      align-self: center;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(12, 14, 20, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-highlight);
+      border-radius: 30px;
+      padding: 6px 16px;
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
+      color: var(--text-primary);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      opacity: 0; transform: translateY(-10px) scale(0.96);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
     }
-    .gi { display:flex; flex-direction:column; align-items:center; gap:4px; }
-    .gi span:first-child { font-size:1.35rem; }
-    .gi span:last-child  { font-size:.58rem; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,.4); font-weight:500; }
+    #gestureBadge.show {
+      opacity: 1; transform: translateY(0) scale(1);
+    }
+    #gestureBadge.badge-draw {
+      border-color: rgba(251, 191, 36, 0.4);
+      color: #fef08a;
+    }
+    #gestureBadge.badge-wipe {
+      border-color: rgba(96, 165, 250, 0.4);
+      color: #bae6fd;
+    }
 
-    /* ── Loader ── */
+    /* Bottom guidance overlay within glass */
+    .hud-bottom {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      width: 100%;
+    }
+    .hud-hint {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(8, 10, 14, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 0.62rem; color: var(--text-muted);
+      letter-spacing: 0.4px;
+    }
+    .hud-hint span { display: flex; align-items: center; gap: 5px; color: var(--text-secondary); font-weight: 500; }
+
+    /* ── Polished Loader State ── */
     #loader {
-      position:absolute; inset:0; background:rgba(9,10,13,.95);
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:14px; z-index:40; border-radius:16px; transition:opacity .7s;
+      position: absolute; inset: 0;
+      background: rgba(9, 10, 14, 0.96);
+      backdrop-filter: blur(20px);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px; z-index: 50;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    #loader.gone { opacity:0; pointer-events:none; }
-    .spinner {
-      width:38px; height:38px;
-      border:3px solid rgba(142,197,252,.12); border-top-color:#8ec5fc;
-      border-radius:50%; animation:spin .8s linear infinite;
+    #loader.gone { opacity: 0; pointer-events: none; }
+    
+    .loader-ring {
+      position: relative; width: 44px; height: 44px;
     }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    #loaderMsg { font-size:.8rem; color:#8ec5fc; letter-spacing:1.2px; font-weight:500; }
-    #loaderSub { font-size:.64rem; color:#4a6275; }
+    .loader-ring svg {
+      width: 100%; height: 100%;
+      animation: spin 1.4s linear infinite;
+    }
+    .loader-ring circle {
+      fill: none; stroke-width: 3.5; stroke-linecap: round;
+      stroke: rgba(142, 197, 252, 0.15);
+    }
+    .loader-ring circle.progress {
+      stroke: var(--accent-blue);
+      stroke-dasharray: 100; stroke-dashoffset: 65;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Controls ── */
-    #controls { display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; }
-    .cg {
-      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
-      border-radius:10px; padding:7px 14px;
-      display:flex; align-items:center; gap:10px;
-      font-size:.7rem; color:#7e9eb5;
+    .loader-text {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
     }
+    #loaderTitle { font-size: 0.85rem; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
+    #loaderSub   { font-size: 0.70rem; color: var(--text-muted); }
+
+    /* ── Studio Control Dock ── */
+    .dock-container {
+      width: 100%; max-width: 960px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      z-index: 30;
+    }
+
+    .studio-dock {
+      width: 100%;
+      background: var(--bg-surface);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      padding: 10px 18px;
+      box-shadow: var(--shadow-md);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+    }
+
+    .dock-sliders {
+      display: flex; align-items: center; gap: 20px;
+      flex: 1; min-width: 280px;
+    }
+    .slider-item {
+      display: flex; flex-direction: column; gap: 4px;
+      flex: 1;
+    }
+    .slider-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.6px; color: var(--text-secondary);
+    }
+    .slider-val {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.68rem; color: var(--accent-blue);
+    }
+
     input[type="range"] {
-      -webkit-appearance:none; width:74px; height:3px;
-      background:rgba(142,197,252,.2); border-radius:2px; cursor:pointer;
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px; outline: none; cursor: pointer;
+      transition: background 0.2s;
     }
+    input[type="range"]:hover { background: rgba(255, 255, 255, 0.15); }
     input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance:none; width:13px; height:13px;
-      border-radius:50%; background:#8ec5fc; box-shadow:0 0 8px #8ec5fc; cursor:pointer;
+      -webkit-appearance: none; appearance: none;
+      width: 14px; height: 14px; border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid var(--accent-blue);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .btn {
-      background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.09);
-      color:#8fc0e0; padding:7px 15px; border-radius:8px;
-      font-size:.7rem; font-family:inherit; font-weight:500; cursor:pointer;
-      transition:all .2s;
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.18);
+      box-shadow: 0 0 12px var(--accent-blue);
     }
-    .btn:hover { background:rgba(142,197,252,.14); color:#cce7ff; box-shadow:0 0 12px rgba(142,197,252,.25); }
-    #statusEl { font-size:.68rem; color:#425869; letter-spacing:.8px; min-height:16px; }
+
+    .dock-actions {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn-action {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.74rem; font-family: inherit; font-weight: 600;
+      letter-spacing: 0.4px;
+      display: inline-flex; align-items: center; gap: 7px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-action svg { width: 14px; height: 14px; fill: currentColor; }
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border-highlight);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+    .btn-action:active {
+      transform: translateY(1px);
+    }
+    
+    .btn-action.btn-primary {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.25), rgba(96, 165, 250, 0.10));
+      border-color: rgba(96, 165, 250, 0.4);
+      color: #dbeafe;
+    }
+    .btn-action.btn-primary:hover {
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.35), rgba(96, 165, 250, 0.15));
+      border-color: rgba(96, 165, 250, 0.6);
+      box-shadow: 0 0 16px rgba(96, 165, 250, 0.3);
+    }
+
+    /* ── Toast Notification ── */
+    #toast {
+      position: fixed; top: 22px; right: 24px;
+      background: rgba(18, 22, 30, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-highlight);
+      box-shadow: var(--shadow-md);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.75rem; font-weight: 500;
+      color: #ffffff;
+      transform: translateY(-30px); opacity: 0; pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+    #toast.show {
+      transform: translateY(0); opacity: 1; pointer-events: auto;
+    }
+    #toast svg { width: 16px; height: 16px; fill: var(--accent-emerald); }
+
+    /* Flash shutter overlay */
+    #shutterFlash {
+      position: absolute; inset: 0; background: #ffffff;
+      opacity: 0; pointer-events: none; z-index: 25;
+      transition: opacity 0.35s ease-out;
+    }
+
+    /* ── Responsive Mobile Media Queries ── */
+    @media (max-width: 768px) {
+      body { padding: 12px 14px; gap: 10px; }
+      header { padding: 8px 14px; }
+      .brand-name { font-size: 0.78rem; }
+      .brand-badge { display: none; }
+      .glass-chassis { width: 100%; border-radius: var(--radius-lg); }
+      .studio-dock {
+        flex-direction: column; align-items: stretch; gap: 12px;
+        padding: 14px;
+      }
+      .dock-sliders { flex-direction: column; gap: 12px; min-width: 100%; }
+      .dock-actions { justify-content: stretch; }
+      .dock-actions .btn-action { flex: 1; justify-content: center; }
+      .hud-hint { display: none; }
+    }
   </style>
 </head>
 <body>
 
-<div class="topbar">
-  <span class="logo">🪟 Foggy Mirror</span>
-  <div class="gpills">
-    <div class="gpill" id="pillDraw"><span class="icon">☝️</span>Draw</div>
-    <div class="gpill" id="pillWipe"><span class="icon">🖐</span>Wipe</div>
+  <!-- Top App Navigation -->
+  <header>
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/></svg>
+      </div>
+      <span class="brand-name">MIST <span class="brand-badge">STUDIO GLASS</span></span>
+    </div>
+
+    <div class="header-status">
+      <div class="status-dot" id="camStatusDot"></div>
+      <span id="camStatusText">Connecting…</span>
+    </div>
+
+    <div class="header-pills">
+      <div class="mode-pill" id="pillDraw">
+        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        Draw
+      </div>
+      <div class="mode-pill" id="pillWipe">
+        <svg viewBox="0 0 24 24"><path d="M23 5.5V20c0 2.2-1.8 4-4 4h-7.5c-1.3 0-2.6-.5-3.5-1.5L1 15.5l1.5-1.5c.4-.4 1-.6 1.5-.6.2 0 .4 0 .6.1L8 15V4c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5v6.5h1V2c0-.8.7-1.5 1.5-1.5S15 1.2 15 2v8.5h1V3.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5V11h1V5.5c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5z"/></svg>
+        Wipe
+      </div>
+    </div>
+  </header>
+
+  <!-- Studio Glass Mirror Viewport -->
+  <main>
+    <div class="glass-chassis" id="glassWrap">
+      <canvas id="camCanvas"  width="640" height="480"></canvas>
+      <canvas id="fogCanvas"  width="640" height="480"></canvas>
+      <canvas id="handCanvas" width="640" height="480"></canvas>
+      <canvas id="uiCanvas"   width="640" height="480"></canvas>
+
+      <!-- Viewport HUD Overlay -->
+      <div class="hud-overlay">
+        <div class="hud-top">
+          <div class="hud-chip">
+            <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:#38bdf8;"></span>
+            <span>640 × 480</span>
+          </div>
+
+          <div id="gestureBadge"></div>
+
+          <div class="hud-chip">
+            <span id="fpsChip">60 FPS</span>
+          </div>
+        </div>
+
+        <div class="hud-bottom">
+          <div class="hud-hint">
+            <span>☝️ Index Point: Draw</span>
+            <span>•</span>
+            <span>🖐 Moving Palm: Wipe</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shutter Flash for Snapshots -->
+      <div id="shutterFlash"></div>
+
+      <!-- Premium Loading Overlay -->
+      <div id="loader">
+        <div class="loader-ring">
+          <svg viewBox="0 0 44 44">
+            <circle cx="22" cy="22" r="18"/>
+            <circle class="progress" cx="22" cy="22" r="18"/>
+          </svg>
+        </div>
+        <div class="loader-text">
+          <span id="loaderTitle">Initializing Studio Vision</span>
+          <span id="loaderSub">Calibrating hand tracking engine…</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Studio Floating Control Dock -->
+  <div class="dock-container">
+    <div class="studio-dock">
+      <div class="dock-sliders">
+        <!-- Brush Size -->
+        <div class="slider-item">
+          <div class="slider-header">
+            <span>Tip Size</span>
+            <span class="slider-val" id="valDraw">10 px</span>
+          </div>
+          <input type="range" id="drawSize" min="4" max="28" value="10"/>
+        </div>
+
+        <!-- Fog Density -->
+        <div class="slider-item">
+          <div class="slider-header">
+            <span>Steam Density</span>
+            <span class="slider-val" id="valDensity">98%</span>
+          </div>
+          <input type="range" id="fogDensity" min="0.80" max="1.00" step="0.01" value="0.98"/>
+        </div>
+
+        <!-- Re-fog Rate -->
+        <div class="slider-item">
+          <div class="slider-header">
+            <span>Refog Rate</span>
+            <span class="slider-val" id="valRefog">1.0x</span>
+          </div>
+          <input type="range" id="refogSpeed" min="0" max="5" step="0.2" value="1.0"/>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="dock-actions">
+        <button class="btn-action" id="clearBtn" title="Reset fog over the entire surface">
+          <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Reset Glass
+        </button>
+        <button class="btn-action btn-primary" id="snapBtn" title="Capture high resolution mirror snapshot">
+          <svg viewBox="0 0 24 24"><path d="M12 15.2a3.2 3.2 0 100-6.4 3.2 3.2 0 000 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+          Capture
+        </button>
+      </div>
+    </div>
   </div>
-</div>
 
-<div id="wrap">
-  <canvas id="camCanvas"  width="640" height="480"></canvas>
-  <canvas id="fogCanvas"  width="640" height="480"></canvas>
-  <canvas id="handCanvas" width="640" height="480"></canvas>
-  <canvas id="uiCanvas"   width="640" height="480"></canvas>
-
-  <div id="gLabel"></div>
-
-  <!-- Guide -->
-  <div id="guide">
-    <div class="gi"><span>☝️</span><span>index finger → draw</span></div>
-    <div class="gi"><span>🖐</span><span>open palm + move → wipe</span></div>
+  <!-- Notification Toast -->
+  <div id="toast">
+    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    <span id="toastMsg">Snapshot saved to Downloads</span>
   </div>
 
-  <div id="loader">
-    <div class="spinner"></div>
-    <p id="loaderMsg">Starting camera…</p>
-    <p id="loaderSub">Allow camera access when prompted</p>
-  </div>
-</div>
+  <video id="video" autoplay playsinline style="display:none"></video>
 
-<div id="controls">
-  <div class="cg"><span>Draw size</span><input type="range" id="drawSize" min="4" max="26" value="10"/></div>
-  <div class="cg"><span>Fog thickness</span><input type="range" id="fogDensity" min="0.80" max="1.00" step="0.01" value="0.98"/></div>
-  <div class="cg"><span>Re-fog speed</span><input type="range" id="refogSpeed" min="0" max="6" step="0.1" value="1.0"/></div>
-  <button class="btn" id="clearBtn">🌫 Re-fog All</button>
-  <button class="btn" id="snapBtn">📸 Snapshot</button>
-</div>
-<div id="statusEl">Initialising hand tracker…</div>
+  <script>
+  // ════════════════════════════════════════════════════
+  //  CORE APPLICATION & STATE
+  // ════════════════════════════════════════════════════
+  const W = 640, H = 480;
+  const video         = document.getElementById('video');
+  const camCanvas     = document.getElementById('camCanvas');
+  const fogCanvas     = document.getElementById('fogCanvas');
+  const handCanvas    = document.getElementById('handCanvas');
+  const uiCanvas      = document.getElementById('uiCanvas');
+  const glassWrap     = document.getElementById('glassWrap');
+  const loader        = document.getElementById('loader');
+  const loaderTitle   = document.getElementById('loaderTitle');
+  const loaderSub     = document.getElementById('loaderSub');
+  const camStatusDot  = document.getElementById('camStatusDot');
+  const camStatusText = document.getElementById('camStatusText');
+  const gestureBadge  = document.getElementById('gestureBadge');
+  const pillDraw      = document.getElementById('pillDraw');
+  const pillWipe      = document.getElementById('pillWipe');
+  const drawSzIn      = document.getElementById('drawSize');
+  const fogDensIn     = document.getElementById('fogDensity');
+  const refogIn       = document.getElementById('refogSpeed');
+  const valDraw       = document.getElementById('valDraw');
+  const valDensity    = document.getElementById('valDensity');
+  const valRefog      = document.getElementById('valRefog');
+  const toast         = document.getElementById('toast');
+  const toastMsg      = document.getElementById('toastMsg');
+  const shutterFlash  = document.getElementById('shutterFlash');
+  const fpsChip       = document.getElementById('fpsChip');
 
-<video id="video" autoplay playsinline style="display:none"></video>
+  const camCtx  = camCanvas.getContext('2d');
+  const fogCtx  = fogCanvas.getContext('2d');
+  const handCtx = handCanvas.getContext('2d');
+  const uiCtx   = uiCanvas.getContext('2d');
 
-<script>
-// ════════════════════════════════════════════════════
-//  SETUP
-// ════════════════════════════════════════════════════
-const W=640, H=480;
-const video      = document.getElementById('video');
-const camCanvas  = document.getElementById('camCanvas');
-const fogCanvas  = document.getElementById('fogCanvas');
-const handCanvas = document.getElementById('handCanvas');
-const uiCanvas   = document.getElementById('uiCanvas');
-const wrap       = document.getElementById('wrap');
-const loader     = document.getElementById('loader');
-const loaderMsg  = document.getElementById('loaderMsg');
-const statusEl   = document.getElementById('statusEl');
-const gLabel     = document.getElementById('gLabel');
-const pillDraw   = document.getElementById('pillDraw');
-const pillWipe   = document.getElementById('pillWipe');
-const drawSzIn   = document.getElementById('drawSize');
-const fogDensIn  = document.getElementById('fogDensity');
-const refogIn    = document.getElementById('refogSpeed');
+  // Slider value readout sync
+  drawSzIn.addEventListener('input', () => valDraw.textContent = `${drawSzIn.value} px`);
+  fogDensIn.addEventListener('input', () => valDensity.textContent = `${Math.round(fogDensIn.value * 100)}%`);
+  refogIn.addEventListener('input', () => valRefog.textContent = `${parseFloat(refogIn.value).toFixed(1)}x`);
 
-const camCtx   = camCanvas.getContext('2d');
-const fogCtx   = fogCanvas.getContext('2d');
-const handCtx  = handCanvas.getContext('2d');
-const uiCtx    = uiCanvas.getContext('2d');
-
-// ════════════════════════════════════════════════════
-//  FOG STATE — Solid, dense, thick fog layer
-// ════════════════════════════════════════════════════
-const fogAlpha   = new Float32Array(W*H).fill(1.0);
-const smearAlpha = new Float32Array(W*H).fill(0.0);
-
-// ════════════════════════════════════════════════════
-//  VALUE NOISE — dense micro-droplet steam texture
-// ════════════════════════════════════════════════════
-const NGRID = new Float32Array(256*256);
-for(let i=0;i<NGRID.length;i++) NGRID[i]=Math.random();
-let noiseT=0;
-function sn(px,py){
-  const nx=((px*.11+noiseT*.12)|0)&255;
-  const ny=((py*.11)|0)&255;
-  return NGRID[nx+ny*256];
-}
-
-// ════════════════════════════════════════════════════
-//  WATER LEAKS & DROPS (Thick condensation drips)
-// ════════════════════════════════════════════════════
-const drops=[];
-function spawnDrop(x,y,sz){
-  drops.push({
-    x: x ?? (15 + Math.random()*(W-30)),
-    y: y ?? (Math.random()*H*.35),
-    r: sz ?? (2.4 + Math.random()*4.2),   // thicker droplet beads
-    vy: .25 + Math.random()*.55,
-    trail: []
-  });
-}
-for(let i=0;i<24;i++) spawnDrop();
-
-// ════════════════════════════════════════════════════
-//  MAIN RENDER LOOP
-// ════════════════════════════════════════════════════
-function renderLoop(){
-  noiseT += .004;
-
-  // 1. Webcam feed — mirrored
-  camCtx.save();
-  camCtx.translate(W,0); camCtx.scale(-1,1);
-  camCtx.drawImage(video,0,0,W,H);
-  camCtx.restore();
-
-  // 2. Thick Dense Fog Pixel Pass
-  const density = parseFloat(fogDensIn.value); // default 0.98 for rich dense fog
-  const img = fogCtx.createImageData(W,H);
-  const d = img.data;
-
-  for(let py=0; py<H; py++){
-    for(let px=0; px<W; px++){
-      const i = py*W + px;
-      let a = fogAlpha[i];
-      if(a < .004){ d[i*4+3]=0; continue; }
-
-      const n = sn(px, py);
-      // Cold, steamy, frosted white-blue condensation
-      const r  = (226 + n * 18) | 0;
-      const g  = (234 + n * 13) | 0;
-      const bv = (244 + n * 7)  | 0;
-
-      // Solid, thick opacity across the glass
-      let fa = Math.min(1.0, a * density);
-
-      // Smear marks from wiping leave authentic wet glass transparency
-      const sm = smearAlpha[i];
-      if(sm > .02 && fa > .02){
-        fa = Math.max(fa * .015, sm * .42);
-      }
-
-      d[i*4]   = r;
-      d[i*4+1] = g;
-      d[i*4+2] = bv;
-      d[i*4+3] = Math.round(fa * 255);
-    }
+  // Toast feedback utility
+  let toastTimer = null;
+  function showToast(message) {
+    toastMsg.textContent = message;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
   }
-  fogCtx.putImageData(img,0,0);
 
-  // 3. Thick Glass Sheen & Moisture Reflection
-  const sheen = fogCtx.createLinearGradient(0, 0, W*.6, H*.6);
-  sheen.addColorStop(0, 'rgba(255,255,255,.07)');
-  sheen.addColorStop(0.5, 'rgba(220,240,255,.025)');
-  sheen.addColorStop(1, 'rgba(255,255,255,0)');
-  fogCtx.fillStyle = sheen;
-  fogCtx.fillRect(0, 0, W, H);
+  // ════════════════════════════════════════════════════
+  //  FOG STATE — Solid, dense, frosted glass layer
+  // ════════════════════════════════════════════════════
+  const fogAlpha   = new Float32Array(W * H).fill(1.0);
+  const smearAlpha = new Float32Array(W * H).fill(0.0);
 
-  // 4. Render Thick Water Leaks / Condensation Runs
-  renderDrops();
+  // Perlin/Value noise grid for realistic micro-condensation
+  const NGRID = new Float32Array(256 * 256);
+  for(let i=0; i<NGRID.length; i++) NGRID[i] = Math.random();
+  let noiseT = 0;
+  function sn(px, py){
+    const nx = ((px * 0.11 + noiseT * 0.12) | 0) & 255;
+    const ny = ((py * 0.11) | 0) & 255;
+    return NGRID[nx + ny * 256];
+  }
 
-  requestAnimationFrame(renderLoop);
-}
+  // ════════════════════════════════════════════════════
+  //  CONDENSATION WATER RUNS & DROPS
+  // ════════════════════════════════════════════════════
+  const drops = [];
+  function spawnDrop(x, y, sz){
+    drops.push({
+      x: x ?? (16 + Math.random() * (W - 32)),
+      y: y ?? (Math.random() * H * 0.32),
+      r: sz ?? (2.4 + Math.random() * 4.0),
+      vy: 0.25 + Math.random() * 0.50,
+      trail: []
+    });
+  }
+  for(let i=0; i<24; i++) spawnDrop();
 
-// ── Water leaks: drips carve realistic clear trails through thick fog ──
-function renderDrops(){
-  if(Math.random() < .016) spawnDrop();
+  // ════════════════════════════════════════════════════
+  //  FPS MONITOR & RENDER LOOP
+  // ════════════════════════════════════════════════════
+  let lastFrameTime = performance.now();
+  let frameCount = 0;
+  let fpsTimer = performance.now();
 
-  for(let i = drops.length - 1; i >= 0; i--){
-    const dr = drops[i];
-    dr.trail.push({x: dr.x, y: dr.y});
-    if(dr.trail.length > 24) dr.trail.shift();
+  function renderLoop(){
+    noiseT += 0.0035;
 
-    dr.y += dr.vy;
-    dr.vy += .011; // gravity acceleration
-    dr.x += (Math.random() - .5) * .35; // gentle meandering drip
+    // Track FPS
+    frameCount++;
+    const now = performance.now();
+    if(now - fpsTimer >= 1000){
+      const fps = Math.round((frameCount * 1000) / (now - fpsTimer));
+      fpsChip.textContent = `${fps} FPS`;
+      frameCount = 0;
+      fpsTimer = now;
+    }
 
-    // Real condensation physics: droplet carves a clear moisture trail through the fog
-    const cx = dr.x | 0, cy = dr.y | 0;
-    const fi = Math.min(W*H-1, Math.max(0, cy*W + cx));
-    if(fogAlpha[fi] > 0.15){
-      // Carve out a narrow clear leak trail in fogAlpha
-      const trR = (dr.r * 0.7) | 0;
-      for(let dy = -trR; dy <= trR; dy++){
-        for(let dx = -trR; dx <= trR; dx++){
-          const pxi = cx + dx, pyi = cy + dy;
-          if(pxi >= 0 && pxi < W && pyi >= 0 && pyi < H){
-            const pi = pyi * W + pxi;
-            fogAlpha[pi] = Math.max(0.04, fogAlpha[pi] - 0.08);
+    // 1. Mirror flipped webcam feed
+    camCtx.save();
+    camCtx.translate(W, 0); camCtx.scale(-1, 1);
+    camCtx.drawImage(video, 0, 0, W, H);
+    camCtx.restore();
+
+    // 2. Thick frosted condensation pass
+    const density = parseFloat(fogDensIn.value);
+    const img = fogCtx.createImageData(W, H);
+    const d = img.data;
+
+    for(let py=0; py<H; py++){
+      for(let px=0; px<W; px++){
+        const i = py * W + px;
+        const a = fogAlpha[i];
+        if(a < 0.004){ d[i*4 + 3] = 0; continue; }
+
+        const n = sn(px, py);
+        // Cool metallic mist tones
+        const r  = (226 + n * 16) | 0;
+        const g  = (234 + n * 12) | 0;
+        const bv = (244 + n * 6)  | 0;
+
+        let fa = Math.min(1.0, a * density);
+
+        // Wipe residue / glassy smear marks
+        const sm = smearAlpha[i];
+        if(sm > 0.02 && fa > 0.02){
+          fa = Math.max(fa * 0.015, sm * 0.42);
+        }
+
+        d[i*4]   = r;
+        d[i*4+1] = g;
+        d[i*4+2] = bv;
+        d[i*4+3] = Math.round(fa * 255);
+      }
+    }
+    fogCtx.putImageData(img, 0, 0);
+
+    // 3. Studio Glass Sheen & Refraction
+    const sheen = fogCtx.createLinearGradient(0, 0, W * 0.65, H * 0.65);
+    sheen.addColorStop(0,   'rgba(255, 255, 255, 0.075)');
+    sheen.addColorStop(0.4, 'rgba(215, 235, 255, 0.025)');
+    sheen.addColorStop(1,   'rgba(255, 255, 255, 0.000)');
+    fogCtx.fillStyle = sheen;
+    fogCtx.fillRect(0, 0, W, H);
+
+    // 4. Render Condensation Drops & Realistic Trickle Trails
+    renderDrops();
+
+    requestAnimationFrame(renderLoop);
+  }
+
+  function renderDrops(){
+    if(Math.random() < 0.016) spawnDrop();
+
+    for(let i = drops.length - 1; i >= 0; i--){
+      const dr = drops[i];
+      dr.trail.push({x: dr.x, y: dr.y});
+      if(dr.trail.length > 24) dr.trail.shift();
+
+      dr.y += dr.vy;
+      dr.vy += 0.011;
+      dr.x += (Math.random() - 0.5) * 0.35;
+
+      // Realistic trickle: drop carves away a thin path through fogAlpha
+      const cx = dr.x | 0, cy = dr.y | 0;
+      const fi = Math.min(W * H - 1, Math.max(0, cy * W + cx));
+      if(fogAlpha[fi] > 0.15){
+        const trR = (dr.r * 0.7) | 0;
+        for(let dy = -trR; dy <= trR; dy++){
+          for(let dx = -trR; dx <= trR; dx++){
+            const pxi = cx + dx, pyi = cy + dy;
+            if(pxi >= 0 && pxi < W && pyi >= 0 && pyi < H){
+              const pi = pyi * W + pxi;
+              fogAlpha[pi] = Math.max(0.04, fogAlpha[pi] - 0.08);
+            }
           }
         }
       }
-    }
 
-    // Kill drop if it leaves bottom or runs off clear zone
-    if(dr.y > H + 12 || (fogAlpha[fi] < .06 && dr.y > 60)){
-      drops.splice(i, 1);
-      continue;
-    }
+      if(dr.y > H + 12 || (fogAlpha[fi] < 0.06 && dr.y > 60)){
+        drops.splice(i, 1);
+        continue;
+      }
 
-    // Render the clear water leak trail
-    if(dr.trail.length > 2){
+      // Draw water track line
+      if(dr.trail.length > 2){
+        fogCtx.beginPath();
+        fogCtx.strokeStyle = 'rgba(180, 225, 255, 0.35)';
+        fogCtx.lineWidth = dr.r * 0.75;
+        fogCtx.lineCap = 'round';
+        fogCtx.moveTo(dr.trail[0].x, dr.trail[0].y);
+        dr.trail.forEach(p => fogCtx.lineTo(p.x, p.y));
+        fogCtx.stroke();
+      }
+
+      // Draw shiny droplet bead
+      const g = fogCtx.createRadialGradient(
+        dr.x - dr.r * 0.3, dr.y - dr.r * 0.35, 0,
+        dr.x, dr.y, dr.r
+      );
+      g.addColorStop(0,    'rgba(255, 255, 255, 0.98)');
+      g.addColorStop(0.38, 'rgba(220, 242, 255, 0.75)');
+      g.addColorStop(0.85, 'rgba(140, 195, 240, 0.25)');
+      g.addColorStop(1,    'rgba(100, 165, 210, 0.02)');
       fogCtx.beginPath();
-      fogCtx.strokeStyle = 'rgba(175,220,250,.35)';
-      fogCtx.lineWidth = dr.r * .75;
-      fogCtx.lineCap = 'round';
-      fogCtx.moveTo(dr.trail[0].x, dr.trail[0].y);
-      dr.trail.forEach(p => fogCtx.lineTo(p.x, p.y));
-      fogCtx.stroke();
-    }
-
-    // Render the glistening water droplet bead
-    const g = fogCtx.createRadialGradient(
-      dr.x - dr.r*.3, dr.y - dr.r*.35, 0,
-      dr.x, dr.y, dr.r
-    );
-    g.addColorStop(0,   'rgba(255,255,255,0.98)');
-    g.addColorStop(0.4, 'rgba(215,240,255,0.75)');
-    g.addColorStop(0.85,'rgba(140,195,235,0.25)');
-    g.addColorStop(1,   'rgba(100,165,210,0.02)');
-    fogCtx.beginPath();
-    fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI*2);
-    fogCtx.fillStyle = g;
-    fogCtx.fill();
-  }
-}
-
-// ════════════════════════════════════════════════════
-//  RE-FOG TIMER
-// ════════════════════════════════════════════════════
-let refogTimer = null;
-function scheduleRefog(){
-  if(refogTimer) return;
-  refogTimer = setInterval(()=>{
-    const spd = parseFloat(refogIn.value);
-    if(spd === 0) return;
-    const inc = spd * .0025;
-    let any = false;
-    for(let i=0; i<fogAlpha.length; i++){
-      if(fogAlpha[i] < 1.0){
-        fogAlpha[i]   = Math.min(1.0, fogAlpha[i] + inc);
-        smearAlpha[i] = Math.max(0, smearAlpha[i] - inc * .35);
-        any = true;
-      }
-    }
-    if(!any){ clearInterval(refogTimer); refogTimer = null; }
-  }, 30);
-}
-
-// ════════════════════════════════════════════════════
-//  ☝️  DRAW (index fingertip writes crisp lines)
-// ════════════════════════════════════════════════════
-function drawOnFog(cx,cy){
-  const r = parseInt(drawSzIn.value), r2 = r*r;
-  const x0 = Math.max(0, cx-r|0), x1 = Math.min(W-1, cx+r|0);
-  const y0 = Math.max(0, cy-r|0), y1 = Math.min(H-1, cy+r|0);
-  for(let py=y0; py<=y1; py++){
-    for(let px=x0; px<=x1; px++){
-      const dx=px-cx, dy=py-cy, d2=dx*dx+dy*dy;
-      if(d2 > r2) continue;
-      const sm = (1 - d2/r2)**3;
-      const i = py*W + px, prev = fogAlpha[i];
-      fogAlpha[i]   = Math.max(0, prev - sm * .98);
-      smearAlpha[i] = Math.max(smearAlpha[i], sm * prev * .35);
+      fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI * 2);
+      fogCtx.fillStyle = g;
+      fogCtx.fill();
     }
   }
-  scheduleRefog();
-}
 
-// ════════════════════════════════════════════════════
-//  🖐  WIPE (palm ellipse wipe on movement)
-// ════════════════════════════════════════════════════
-function wipePalm(cx, cy, rx, ry, angle){
-  const cosA = Math.cos(-angle), sinA = Math.sin(-angle);
-  const pad  = Math.max(rx, ry) + 4;
-  const x0 = Math.max(0, (cx-pad)|0), x1 = Math.min(W-1, (cx+pad)|0);
-  const y0 = Math.max(0, (cy-pad)|0), y1 = Math.min(H-1, (cy+pad)|0);
-  for(let py=y0; py<=y1; py++){
-    for(let px=x0; px<=x1; px++){
-      const dx = px-cx, dy = py-cy;
-      const lx = dx*cosA - dy*sinA, ly = dx*sinA + dy*cosA;
-      const t  = (lx/rx)**2 + (ly/ry)**2;
-      if(t > 1) continue;
-      const str = (1 - t)**2;
-      const i = py*W + px, prev = fogAlpha[i];
-      fogAlpha[i]   = Math.max(0, prev - str * .90);
-      smearAlpha[i] = Math.max(smearAlpha[i], str * prev * .45);
-    }
-  }
-  scheduleRefog();
-}
-
-// ════════════════════════════════════════════════════
-//  GESTURE CLASSIFIER (pure hand tracking)
-// ════════════════════════════════════════════════════
-function ext(lm, tip, pip){ return lm[tip].y < lm[pip].y - .02; }
-function classifyHand(lm){
-  const i = ext(lm, 8, 6),  m = ext(lm, 12, 10);
-  const r = ext(lm, 16, 14), p = ext(lm, 20, 18);
-  if( i && !m && !r && !p) return 'DRAW';
-  if( i &&  m &&  r &&  p) return 'WIPE';
-  return 'NONE';
-}
-
-// ════════════════════════════════════════════════════
-//  UI HELPERS & SKELETON
-// ════════════════════════════════════════════════════
-const TIPS  = [4,8,12,16,20];
-const BONES = [
-  [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
-  [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
-  [13,17],[0,17],[17,18],[18,19],[19,20]
-];
-const PALM_IDS   = [0,1,5,9,13,17];
-const MIN_WIPE   = 3.0, MIN_DRAW = 0.5;
-let prevPalm     = null, prevFinger = null;
-let currentGesture = 'NONE';
-
-function lmPt(lm, i){ return { x: (1 - lm[i].x)*W, y: lm[i].y*H }; }
-
-function setGestureUI(g){
-  currentGesture = g;
-  gLabel.className = '';
-  pillDraw.classList.remove('draw-on');
-  pillWipe.classList.remove('wipe-on');
-  if(g === 'DRAW'){
-    gLabel.textContent = '☝️ Drawing';
-    gLabel.className = 'draw';
-    pillDraw.classList.add('draw-on');
-  } else if(g === 'WIPE'){
-    gLabel.textContent = '🖐 Wiping';
-    gLabel.className = 'wipe';
-    pillWipe.classList.add('wipe-on');
-  }
-}
-
-function drawSkeleton(lm, gesture){
-  const boneClr = gesture === 'DRAW' ? 'rgba(255,200,120,.55)'
-                : gesture === 'WIPE' ? 'rgba(100,195,255,.50)'
-                : 'rgba(140,180,210,.35)';
-  const tipClr  = gesture === 'DRAW' ? 'rgba(255,225,160,.98)'
-                : gesture === 'WIPE' ? 'rgba(170,225,255,.98)'
-                : 'rgba(190,225,255,.75)';
-
-  handCtx.save();
-  handCtx.strokeStyle = boneClr; handCtx.lineWidth = 1.6; handCtx.lineCap = 'round';
-  BONES.forEach(([a,b])=>{
-    const pa = lmPt(lm,a), pb = lmPt(lm,b);
-    handCtx.beginPath(); handCtx.moveTo(pa.x, pa.y); handCtx.lineTo(pb.x, pb.y); handCtx.stroke();
-  });
-  for(let i=0; i<21; i++){
-    const p = lmPt(lm, i), r = TIPS.includes(i) ? 5.2 : 2.6;
-    handCtx.beginPath(); handCtx.arc(p.x, p.y, r, 0, Math.PI*2);
-    handCtx.fillStyle = TIPS.includes(i) ? tipClr : boneClr.replace('.55','.8').replace('.50','.8').replace('.35','.6');
-    handCtx.fill();
-  }
-  handCtx.restore();
-}
-
-function drawFingertipCursor(x, y){
-  const r = parseInt(drawSzIn.value);
-  uiCtx.save();
-  const g = uiCtx.createRadialGradient(x, y, 0, x, y, r + 12);
-  g.addColorStop(0, 'rgba(255,210,120,.4)');
-  g.addColorStop(1, 'rgba(255,210,120,0)');
-  uiCtx.fillStyle = g; uiCtx.beginPath(); uiCtx.arc(x, y, r + 12, 0, Math.PI*2); uiCtx.fill();
-  uiCtx.strokeStyle = 'rgba(255,220,140,.95)'; uiCtx.lineWidth = 1.6;
-  uiCtx.beginPath(); uiCtx.arc(x, y, r, 0, Math.PI*2); uiCtx.stroke();
-  uiCtx.fillStyle = 'rgba(255,245,200,.98)';
-  uiCtx.beginPath(); uiCtx.arc(x, y, 2.8, 0, Math.PI*2); uiCtx.fill();
-  uiCtx.restore();
-}
-
-// ════════════════════════════════════════════════════
-//  HAND TRACKING RESULT HANDLER
-// ════════════════════════════════════════════════════
-function onHandResults(res){
-  handCtx.clearRect(0, 0, W, H);
-  uiCtx.clearRect(0, 0, W, H);
-
-  if(!res.multiHandLandmarks?.length){
-    setGestureUI('NONE');
-    prevPalm = null; prevFinger = null;
-    return;
-  }
-
-  const lm = res.multiHandLandmarks[0];
-  const gesture = classifyHand(lm);
-  setGestureUI(gesture);
-  drawSkeleton(lm, gesture);
-
-  const pts = PALM_IDS.map(i => lmPt(lm, i));
-  const pcx = pts.reduce((s,p) => s + p.x, 0) / pts.length;
-  const pcy = pts.reduce((s,p) => s + p.y, 0) / pts.length;
-  const tip = lmPt(lm, 8); // index fingertip
-
-  if(gesture === 'DRAW'){
-    drawFingertipCursor(tip.x, tip.y);
-    const vel = prevFinger ? Math.hypot(tip.x - prevFinger.x, tip.y - prevFinger.y) : 99;
-    if(vel > MIN_DRAW){
-      drawOnFog(tip.x, tip.y);
-      if(prevFinger && vel > 3){
-        const steps = Math.ceil(vel / parseInt(drawSzIn.value) * 1.5);
-        for(let s=1; s<steps; s++){
-          drawOnFog(
-            prevFinger.x + (tip.x - prevFinger.x)*s/steps,
-            prevFinger.y + (tip.y - prevFinger.y)*s/steps
-          );
+  // ════════════════════════════════════════════════════
+  //  RE-FOG ACCUMULATOR
+  // ════════════════════════════════════════════════════
+  let refogTimer = null;
+  function scheduleRefog(){
+    if(refogTimer) return;
+    refogTimer = setInterval(() => {
+      const spd = parseFloat(refogIn.value);
+      if(spd === 0) return;
+      const inc = spd * 0.0025;
+      let any = false;
+      for(let i=0; i<fogAlpha.length; i++){
+        if(fogAlpha[i] < 1.0){
+          fogAlpha[i]   = Math.min(1.0, fogAlpha[i] + inc);
+          smearAlpha[i] = Math.max(0, smearAlpha[i] - inc * 0.35);
+          any = true;
         }
       }
-    }
-    prevFinger = { x: tip.x, y: tip.y };
-    prevPalm   = null;
+      if(!any){ clearInterval(refogTimer); refogTimer = null; }
+    }, 30);
+  }
 
-  } else if(gesture === 'WIPE'){
-    prevFinger = null;
-    const wrist = lmPt(lm, 0), mid = lmPt(lm, 9);
-    const pLen  = Math.hypot(mid.x - wrist.x, mid.y - wrist.y);
-    const angle = Math.atan2(mid.y - wrist.y, mid.x - wrist.x);
-    const rx = pLen * .78, ry = pLen * .56;
-    const vel = prevPalm ? Math.hypot(pcx - prevPalm.x, pcy - prevPalm.y) : 0;
-
-    if(vel > MIN_WIPE || !prevPalm){
-      wipePalm(pcx, pcy, rx, ry, angle);
-      if(prevPalm && vel > 5){
-        const steps = Math.ceil(vel / (rx * .45));
-        for(let s=1; s<steps; s++){
-          wipePalm(
-            prevPalm.x + (pcx - prevPalm.x)*s/steps,
-            prevPalm.y + (pcy - prevPalm.y)*s/steps,
-            rx, ry, angle
-          );
-        }
+  // ════════════════════════════════════════════════════
+  //  ☝️  FINGERTIP DRAWING
+  // ════════════════════════════════════════════════════
+  function drawOnFog(cx, cy){
+    const r = parseInt(drawSzIn.value), r2 = r * r;
+    const x0 = Math.max(0, cx - r | 0), x1 = Math.min(W - 1, cx + r | 0);
+    const y0 = Math.max(0, cy - r | 0), y1 = Math.min(H - 1, cy + r | 0);
+    for(let py = y0; py <= y1; py++){
+      for(let px = x0; px <= x1; px++){
+        const dx = px - cx, dy = py - cy, d2 = dx * dx + dy * dy;
+        if(d2 > r2) continue;
+        const sm = (1 - d2 / r2) ** 3;
+        const i = py * W + px, prev = fogAlpha[i];
+        fogAlpha[i]   = Math.max(0, prev - sm * 0.98);
+        smearAlpha[i] = Math.max(smearAlpha[i], sm * prev * 0.35);
       }
     }
+    scheduleRefog();
+  }
 
-    // Dashed palm outline
+  // ════════════════════════════════════════════════════
+  //  🖐  PALM WIPE
+  // ════════════════════════════════════════════════════
+  function wipePalm(cx, cy, rx, ry, angle){
+    const cosA = Math.cos(-angle), sinA = Math.sin(-angle);
+    const pad  = Math.max(rx, ry) + 4;
+    const x0 = Math.max(0, (cx - pad) | 0), x1 = Math.min(W - 1, (cx + pad) | 0);
+    const y0 = Math.max(0, (cy - pad) | 0), y1 = Math.min(H - 1, (cy + pad) | 0);
+    for(let py = y0; py <= y1; py++){
+      for(let px = x0; px <= x1; px++){
+        const dx = px - cx, dy = py - cy;
+        const lx = dx * cosA - dy * sinA, ly = dx * sinA + dy * cosA;
+        const t  = (lx / rx) ** 2 + (ly / ry) ** 2;
+        if(t > 1) continue;
+        const str = (1 - t) ** 2;
+        const i = py * W + px, prev = fogAlpha[i];
+        fogAlpha[i]   = Math.max(0, prev - str * 0.90);
+        smearAlpha[i] = Math.max(smearAlpha[i], str * prev * 0.45);
+      }
+    }
+    scheduleRefog();
+  }
+
+  // ════════════════════════════════════════════════════
+  //  GESTURE CLASSIFIER
+  // ════════════════════════════════════════════════════
+  function ext(lm, tip, pip){ return lm[tip].y < lm[pip].y - 0.02; }
+  function classifyHand(lm){
+    const i = ext(lm, 8, 6),   m = ext(lm, 12, 10);
+    const r = ext(lm, 16, 14), p = ext(lm, 20, 18);
+    if( i && !m && !r && !p) return 'DRAW';
+    if( i &&  m &&  r &&  p) return 'WIPE';
+    return 'NONE';
+  }
+
+  // ════════════════════════════════════════════════════
+  //  UI FEEDBACK & SKELETON OVERLAY
+  // ════════════════════════════════════════════════════
+  const TIPS  = [4, 8, 12, 16, 20];
+  const BONES = [
+    [0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],
+    [5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],
+    [13,17],[0,17],[17,18],[18,19],[19,20]
+  ];
+  const PALM_IDS   = [0, 1, 5, 9, 13, 17];
+  const MIN_WIPE   = 3.0, MIN_DRAW = 0.5;
+  let prevPalm     = null, prevFinger = null;
+  let currentGesture = 'NONE';
+
+  function lmPt(lm, i){ return { x: (1 - lm[i].x) * W, y: lm[i].y * H }; }
+
+  function setGestureUI(g){
+    currentGesture = g;
+    pillDraw.classList.toggle('active-draw', g === 'DRAW');
+    pillWipe.classList.toggle('active-wipe', g === 'WIPE');
+
+    if(g === 'DRAW'){
+      gestureBadge.textContent = '☝️ Drawing on Glass';
+      gestureBadge.className = 'show badge-draw';
+    } else if(g === 'WIPE'){
+      gestureBadge.textContent = '🖐 Surface Wipe Active';
+      gestureBadge.className = 'show badge-wipe';
+    } else {
+      gestureBadge.className = '';
+    }
+  }
+
+  function drawSkeleton(lm, gesture){
+    const boneClr = gesture === 'DRAW' ? 'rgba(251, 191, 36, 0.55)'
+                  : gesture === 'WIPE' ? 'rgba(96, 165, 250, 0.50)'
+                  : 'rgba(148, 163, 184, 0.30)';
+    const tipClr  = gesture === 'DRAW' ? 'rgba(254, 240, 138, 0.98)'
+                  : gesture === 'WIPE' ? 'rgba(186, 230, 253, 0.98)'
+                  : 'rgba(226, 232, 240, 0.80)';
+
     handCtx.save();
-    handCtx.translate(pcx, pcy); handCtx.rotate(angle);
-    handCtx.setLineDash([4, 6]);
-    handCtx.strokeStyle = 'rgba(100,195,255,.25)'; handCtx.lineWidth = 1.2;
-    handCtx.beginPath(); handCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI*2); handCtx.stroke();
+    handCtx.strokeStyle = boneClr; handCtx.lineWidth = 1.6; handCtx.lineCap = 'round';
+    BONES.forEach(([a, b]) => {
+      const pa = lmPt(lm, a), pb = lmPt(lm, b);
+      handCtx.beginPath(); handCtx.moveTo(pa.x, pa.y); handCtx.lineTo(pb.x, pb.y); handCtx.stroke();
+    });
+    for(let i=0; i<21; i++){
+      const p = lmPt(lm, i), r = TIPS.includes(i) ? 5.0 : 2.5;
+      handCtx.beginPath(); handCtx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      handCtx.fillStyle = TIPS.includes(i) ? tipClr : boneClr.replace('0.55','0.8').replace('0.50','0.8').replace('0.30','0.6');
+      handCtx.fill();
+    }
     handCtx.restore();
-
-    prevPalm = { x: pcx, y: pcy };
-
-  } else {
-    prevFinger = null; prevPalm = null;
   }
-}
 
-// ════════════════════════════════════════════════════
-//  BUTTONS
-// ════════════════════════════════════════════════════
-document.getElementById('clearBtn').addEventListener('click', ()=>{
-  fogAlpha.fill(1.0); smearAlpha.fill(0.0);
-  if(refogTimer){ clearInterval(refogTimer); refogTimer = null; }
-});
+  function drawFingertipCursor(x, y){
+    const r = parseInt(drawSzIn.value);
+    uiCtx.save();
+    // Warm radial bloom
+    const g = uiCtx.createRadialGradient(x, y, 0, x, y, r + 10);
+    g.addColorStop(0, 'rgba(251, 191, 36, 0.45)');
+    g.addColorStop(1, 'rgba(251, 191, 36, 0.00)');
+    uiCtx.fillStyle = g; uiCtx.beginPath(); uiCtx.arc(x, y, r + 10, 0, Math.PI * 2); uiCtx.fill();
 
-document.getElementById('snapBtn').addEventListener('click', ()=>{
-  const m = document.createElement('canvas'); m.width = W; m.height = H;
-  const mc = m.getContext('2d');
-  mc.drawImage(camCanvas, 0, 0);
-  mc.drawImage(fogCanvas, 0, 0);
-  mc.drawImage(handCanvas, 0, 0);
-  const a = document.createElement('a');
-  a.download = `foggy-mirror-${Date.now()}.png`; a.href = m.toDataURL(); a.click();
-});
+    // Precision outer target ring
+    uiCtx.strokeStyle = 'rgba(254, 240, 138, 0.95)'; uiCtx.lineWidth = 1.5;
+    uiCtx.beginPath(); uiCtx.arc(x, y, r, 0, Math.PI * 2); uiCtx.stroke();
 
-// ════════════════════════════════════════════════════
-//  START HAND TRACKING (Fast & Lightweight)
-// ════════════════════════════════════════════════════
-function startHands(){
-  loaderMsg.textContent = 'Loading hand tracking model…';
+    // Center focal point
+    uiCtx.fillStyle = '#ffffff';
+    uiCtx.beginPath(); uiCtx.arc(x, y, 2.5, 0, Math.PI * 2); uiCtx.fill();
+    uiCtx.restore();
+  }
 
-  const hands = new Hands({
-    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
-  });
-  hands.setOptions({
-    maxNumHands: 1,
-    modelComplexity: 1,
-    minDetectionConfidence: .72,
-    minTrackingConfidence: .62
-  });
-  hands.onResults(onHandResults);
+  // ════════════════════════════════════════════════════
+  //  MEDIAPIPE RESULTS
+  // ════════════════════════════════════════════════════
+  function onHandResults(res){
+    handCtx.clearRect(0, 0, W, H);
+    uiCtx.clearRect(0, 0, W, H);
 
-  let isProcessing = false;
-  const cam = new Camera(video, {
-    onFrame: async () => {
-      if(isProcessing) return;
-      isProcessing = true;
-      try {
-        await hands.send({ image: video });
-      } finally {
-        isProcessing = false;
+    if(!res.multiHandLandmarks?.length){
+      setGestureUI('NONE');
+      prevPalm = null; prevFinger = null;
+      camStatusDot.classList.add('active');
+      camStatusText.textContent = 'Camera Ready';
+      return;
+    }
+
+    camStatusDot.classList.add('active');
+    camStatusText.textContent = 'Tracking Active';
+
+    const lm = res.multiHandLandmarks[0];
+    const gesture = classifyHand(lm);
+    setGestureUI(gesture);
+    drawSkeleton(lm, gesture);
+
+    const pts = PALM_IDS.map(i => lmPt(lm, i));
+    const pcx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
+    const pcy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
+    const tip = lmPt(lm, 8);
+
+    if(gesture === 'DRAW'){
+      drawFingertipCursor(tip.x, tip.y);
+      const vel = prevFinger ? Math.hypot(tip.x - prevFinger.x, tip.y - prevFinger.y) : 99;
+      if(vel > MIN_DRAW){
+        drawOnFog(tip.x, tip.y);
+        if(prevFinger && vel > 3){
+          const steps = Math.ceil(vel / parseInt(drawSzIn.value) * 1.5);
+          for(let s = 1; s < steps; s++){
+            drawOnFog(
+              prevFinger.x + (tip.x - prevFinger.x) * s / steps,
+              prevFinger.y + (tip.y - prevFinger.y) * s / steps
+            );
+          }
+        }
       }
-    },
-    width: W, height: H
+      prevFinger = { x: tip.x, y: tip.y };
+      prevPalm   = null;
+
+    } else if(gesture === 'WIPE'){
+      prevFinger = null;
+      const wrist = lmPt(lm, 0), mid = lmPt(lm, 9);
+      const pLen  = Math.hypot(mid.x - wrist.x, mid.y - wrist.y);
+      const angle = Math.atan2(mid.y - wrist.y, mid.x - wrist.x);
+      const rx = pLen * 0.78, ry = pLen * 0.56;
+      const vel = prevPalm ? Math.hypot(pcx - prevPalm.x, pcy - prevPalm.y) : 0;
+
+      if(vel > MIN_WIPE || !prevPalm){
+        wipePalm(pcx, pcy, rx, ry, angle);
+        if(prevPalm && vel > 5){
+          const steps = Math.ceil(vel / (rx * 0.45));
+          for(let s = 1; s < steps; s++){
+            wipePalm(
+              prevPalm.x + (pcx - prevPalm.x) * s / steps,
+              prevPalm.y + (pcy - prevPalm.y) * s / steps,
+              rx, ry, angle
+            );
+          }
+        }
+      }
+
+      // Elegant dashed palm ellipse
+      handCtx.save();
+      handCtx.translate(pcx, pcy); handCtx.rotate(angle);
+      handCtx.setLineDash([4, 6]);
+      handCtx.strokeStyle = 'rgba(186, 230, 253, 0.35)'; handCtx.lineWidth = 1.4;
+      handCtx.beginPath(); handCtx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); handCtx.stroke();
+      handCtx.restore();
+
+      prevPalm = { x: pcx, y: pcy };
+
+    } else {
+      prevFinger = null; prevPalm = null;
+    }
+  }
+
+  // ════════════════════════════════════════════════════
+  //  ACTIONS: RESET & HIGH-RES SNAPSHOT
+  // ════════════════════════════════════════════════════
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    fogAlpha.fill(1.0);
+    smearAlpha.fill(0.0);
+    if(refogTimer){ clearInterval(refogTimer); refogTimer = null; }
+    showToast('Mirror surface completely re-fogged');
   });
 
-  cam.start().then(()=>{
-    setTimeout(() => loader.classList.add('gone'), 1600);
-    statusEl.textContent = '✅ Ready! ☝️ Index finger=Draw  🖐 Open palm=Wipe';
-    requestAnimationFrame(renderLoop);
-  }).catch(err => {
-    loaderMsg.textContent = '❌ ' + err.message;
-  });
-}
+  document.getElementById('snapBtn').addEventListener('click', () => {
+    // Camera shutter flash effect
+    shutterFlash.style.opacity = '0.9';
+    setTimeout(() => shutterFlash.style.opacity = '0', 200);
 
-// ════════════════════════════════════════════════════
-//  BOOT
-// ════════════════════════════════════════════════════
-navigator.mediaDevices.getUserMedia({
-  video: { width: W, height: H, facingMode: 'user' },
-  audio: false
-})
-.then(stream => {
-  video.srcObject = stream;
-  video.play();
-  startHands();
-})
-.catch(err => {
-  loaderMsg.textContent = '❌ Camera: ' + err.message;
-});
-</script>
+    const m = document.createElement('canvas'); m.width = W; m.height = H;
+    const mc = m.getContext('2d');
+    mc.drawImage(camCanvas, 0, 0);
+    mc.drawImage(fogCanvas, 0, 0);
+    mc.drawImage(handCanvas, 0, 0);
+
+    const a = document.createElement('a');
+    a.download = `mist-studio-${Date.now()}.png`;
+    a.href = m.toDataURL('image/png');
+    a.click();
+
+    showToast('Snapshot saved to Downloads');
+  });
+
+  // Touch screen fallback: allow direct drawing on touch devices
+  let isTouching = false;
+  glassWrap.addEventListener('pointerdown', (e) => {
+    isTouching = true;
+    const rect = glassWrap.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (W / rect.width);
+    const y = (e.clientY - rect.top) * (H / rect.height);
+    drawOnFog(x, y);
+  });
+  window.addEventListener('pointermove', (e) => {
+    if(!isTouching) return;
+    const rect = glassWrap.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (W / rect.width);
+    const y = (e.clientY - rect.top) * (H / rect.height);
+    drawOnFog(x, y);
+  });
+  window.addEventListener('pointerup', () => isTouching = false);
+
+  // ════════════════════════════════════════════════════
+  //  BOOT & INITIALIZATION
+  // ════════════════════════════════════════════════════
+  function startStudio(){
+    loaderTitle.textContent = 'Loading Vision Engine';
+    loaderSub.textContent = 'Loading MediaPipe hand landmarks…';
+
+    const hands = new Hands({
+      locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
+    });
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.72,
+      minTrackingConfidence: 0.62
+    });
+    hands.onResults(onHandResults);
+
+    let isProcessing = false;
+    const cam = new Camera(video, {
+      onFrame: async () => {
+        if(isProcessing) return;
+        isProcessing = true;
+        try {
+          await hands.send({ image: video });
+        } finally {
+          isProcessing = false;
+        }
+      },
+      width: W, height: H
+    });
+
+    cam.start().then(() => {
+      setTimeout(() => loader.classList.add('gone'), 1200);
+      camStatusDot.classList.add('active');
+      camStatusText.textContent = 'Camera Ready';
+      requestAnimationFrame(renderLoop);
+    }).catch(err => {
+      loaderTitle.textContent = 'Camera Error';
+      loaderSub.textContent = err.message;
+      camStatusText.textContent = 'Permission Denied';
+    });
+  }
+
+  // Camera stream boot
+  navigator.mediaDevices.getUserMedia({
+    video: { width: W, height: H, facingMode: 'user' },
+    audio: false
+  })
+  .then(stream => {
+    video.srcObject = stream;
+    video.play();
+    startStudio();
+  })
+  .catch(err => {
+    loaderTitle.textContent = 'Camera Access Required';
+    loaderSub.textContent = 'Please enable webcam access in browser settings.';
+    camStatusText.textContent = 'Camera Blocked';
+  });
+  </script>
 </body>
 </html>
