@@ -196,7 +196,7 @@
 <div id="controls">
   <div class="cg"><span>Draw size</span><input type="range" id="drawSize" min="4" max="24" value="9"/></div>
   <div class="cg"><span>Re-fog</span><input type="range" id="refogSpeed" min="0" max="6" step="0.1" value="1.0"/></div>
-  <div class="cg"><span>Mouth threshold</span><input type="range" id="mouthThresh" min="0.02" max="0.15" step="0.005" value="0.055"/></div>
+  <div class="cg"><span>Mouth threshold</span><input type="range" id="mouthThresh" min="0.015" max="0.10" step="0.005" value="0.035"/></div>
   <button class="btn" id="clearBtn">🌫 Re-fog All</button>
   <button class="btn" id="snapBtn">📸 Snapshot</button>
 </div>
@@ -459,7 +459,7 @@ function setGestureUI(g){
   pillBlow.classList.remove('blow-on');
   if(g==='DRAW'){ gLabel.textContent='☝️ Drawing'; gLabel.className='draw'; pillDraw.classList.add('draw-on'); }
   else if(g==='WIPE'){ gLabel.textContent='🖐 Wiping'; gLabel.className='wipe'; pillWipe.classList.add('wipe-on'); }
-  else if(g==='BLOW'){ gLabel.textContent='👄 Re-fogging All'; gLabel.className='blow'; pillBlow.classList.add('blow-on'); }
+  else if(g==='BLOW'){ gLabel.textContent='🌫 PAGE RE-FOGGED'; gLabel.className='blow'; pillBlow.classList.add('blow-on'); }
 }
 
 function drawSkeleton(lm,gesture){
@@ -578,38 +578,46 @@ function onFaceResults(res){
   }
   const lm=res.multiFaceLandmarks[0];
 
-  // Mouth open amount (normalised by face height)
-  const faceH = Math.abs(lm[10].y - lm[152].y); // forehead→chin
-  const mOpen  = Math.max(0,(lm[14].y - lm[13].y) / Math.max(faceH,0.01));
+  // Robust mouth open ratio:
+  const faceH = Math.hypot(lm[10].x - lm[152].x, lm[10].y - lm[152].y);
+  const innerLipH = Math.hypot(lm[14].x - lm[13].x, lm[14].y - lm[13].y);
+  const mOpen  = innerLipH / Math.max(faceH, 0.01);
   mouthRatio   = mOpen;
 
   // Update mouth meter UI
-  const pct=Math.min(1,mOpen/0.15)*100;
+  const pct=Math.min(100, Math.max(0, (mOpen/0.10)*100));
   mouthFill.style.height=`${pct}%`;
 
   // Update threshold line position
   const thresh=parseFloat(mouthThreshIn.value);
-  const thPct=Math.min(1,thresh/0.15)*100;
+  const thPct=Math.min(100, Math.max(0, (thresh/0.10)*100));
   mouthThreshLine.style.bottom=`${thPct}%`;
 
-  // Trigger full re-fog when mouth crosses threshold
+  // Trigger full page re-fog when mouth crosses threshold
   if(mOpen>thresh){
     setGestureUI('BLOW');
     pillBlow.classList.add('blow-on');
 
-    // Steam & re-fog ALL pixels across the entire glass!
-    const boost = 0.05 + Math.min(0.12, (mOpen - thresh) * 1.8);
-    for(let i=0; i<fogAlpha.length; i++){
-      if(fogAlpha[i] < 1.0) fogAlpha[i] = Math.min(1.0, fogAlpha[i] + boost);
-      if(smearAlpha[i] > 0) smearAlpha[i] = Math.max(0, smearAlpha[i] - boost * 0.5);
-    }
+    // INSTANTLY RE-FOG THE ENTIRE PAGE TO 100%
+    fogAlpha.fill(1.0);
+    smearAlpha.fill(0.0);
+    if(refogTimer){ clearInterval(refogTimer); refogTimer=null; }
 
     blowCooldown--;
     if(blowCooldown<=0){
-      // Mirror position of mouth on the foggy glass
       const mx=(1-lm[14].x)*W;
       const my=lm[14].y*H;
-      addFogBloom(mx,my,mOpen-thresh);
+      const ring=document.createElement('div');
+      ring.className='breath-ring';
+      ring.style.left=`${mx/W*100}%`;
+      ring.style.top =`${my/H*100}%`;
+      wrap.appendChild(ring);
+      setTimeout(()=>ring.remove(),1500);
+
+      // Fresh water drops across the mirror
+      for(let d=0;d<3;d++){
+        spawnDrop(Math.random()*W, Math.random()*H*0.4, 1.5+Math.random()*3);
+      }
       blowCooldown=8;
     }
     // Draw subtle mouth outline on face canvas
@@ -673,10 +681,17 @@ function startAll(){
   face.onResults(onFaceResults);
 
   // Single camera — sends frame to both models
+  let isSending = false;
   const cam=new Camera(video,{
     onFrame:async()=>{
-      await hands.send({image:video});
-      await face.send({image:video});
+      if(isSending) return;
+      isSending = true;
+      try {
+        await hands.send({image:video});
+        await face.send({image:video});
+      } finally {
+        isSending = false;
+      }
     },
     width:W, height:H
   });
