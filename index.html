@@ -1,329 +1,645 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Foggy Webcam ✍️</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Foggy Mirror</title>
+
+  <!-- MediaPipe Hands -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --glass: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.10);
+      --accent: #7eb8f7;
     }
 
     body {
-      background: #0a0a0f;
+      background: #0c0d10;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      font-family: 'Segoe UI', sans-serif;
-      color: #fff;
+      font-family: 'Inter', sans-serif;
+      color: #e0e8f0;
       overflow: hidden;
+      gap: 14px;
     }
 
-    h1 {
-      font-size: 1.5rem;
-      letter-spacing: 2px;
-      margin-bottom: 12px;
-      opacity: 0.7;
-      text-shadow: 0 0 20px rgba(150, 200, 255, 0.8);
+    /* ── Top bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0.75;
     }
+    .topbar h1 {
+      font-size: 1rem;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #9ec8f5;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; }
 
-    #canvas-wrapper {
+    /* ── Canvas wrapper ── */
+    #wrap {
       position: relative;
-      border-radius: 16px;
+      border-radius: 14px;
       overflow: hidden;
       box-shadow:
-        0 0 60px rgba(100, 160, 255, 0.25),
-        0 0 0 1px rgba(255,255,255,0.08);
+        0 0 0 1px var(--border),
+        0 8px 60px rgba(0,0,0,0.6),
+        inset 0 0 0 1px rgba(255,255,255,0.04);
     }
 
-    /* Hidden video element — only used to feed the webcam into canvas */
-    #video {
-      display: none;
-    }
-
-    /* Webcam background layer */
-    #camCanvas {
+    /* All canvases stack */
+    #wrap canvas {
       display: block;
-      border-radius: 16px;
+      width: 640px;
+      height: 480px;
     }
+    #camCanvas  { position: relative; }
+    #fogCanvas,
+    #handCanvas { position: absolute; top:0; left:0; pointer-events: none; }
+    #fogCanvas  { pointer-events: all; cursor: none; }
 
-    /* Fog overlay layer (drawn on top) */
-    #fogCanvas {
+    /* Custom cursor dot */
+    #cursor {
       position: absolute;
-      top: 0;
-      left: 0;
-      border-radius: 16px;
-      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23aad4ff' stroke-width='2'/%3E%3C/svg%3E") 16 16, crosshair;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(200,230,255,0.7);
+      pointer-events: none;
+      transform: translate(-50%,-50%);
+      display: none;
+      transition: width 0.1s, height 0.1s;
+      z-index: 10;
     }
 
-    /* Controls bar */
+    /* ── Controls ── */
     #controls {
-      margin-top: 16px;
       display: flex;
-      gap: 14px;
+      gap: 10px;
       align-items: center;
       flex-wrap: wrap;
       justify-content: center;
     }
 
-    label {
-      font-size: 0.82rem;
-      opacity: 0.65;
-      margin-right: 4px;
+    .ctrl-group {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.75rem;
+      color: #8faabb;
     }
+    .ctrl-group label { white-space: nowrap; }
 
     input[type="range"] {
-      accent-color: #78b9ff;
+      -webkit-appearance: none;
+      width: 90px; height: 3px;
+      background: rgba(126,184,247,0.25);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
       cursor: pointer;
     }
 
-    button {
-      padding: 8px 18px;
-      border: 1px solid rgba(150, 200, 255, 0.35);
-      background: rgba(100, 160, 255, 0.12);
-      color: #b8d8ff;
+    .btn {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      color: #9ec8f5;
+      padding: 7px 15px;
       border-radius: 8px;
+      font-size: 0.75rem;
+      font-family: inherit;
       cursor: pointer;
-      font-size: 0.85rem;
-      transition: all 0.2s;
+      letter-spacing: 0.5px;
+      transition: background 0.2s, box-shadow 0.2s;
     }
+    .btn:hover { background: rgba(126,184,247,0.15); box-shadow: 0 0 12px rgba(126,184,247,0.2); }
+    .btn.active { background: rgba(126,184,247,0.22); color: #fff; box-shadow: 0 0 14px rgba(126,184,247,0.3); }
 
-    button:hover {
-      background: rgba(100, 160, 255, 0.28);
-      color: #fff;
-      box-shadow: 0 0 12px rgba(100, 160, 255, 0.3);
-    }
-
+    /* ── Status bar ── */
     #status {
-      margin-top: 10px;
-      font-size: 0.78rem;
-      opacity: 0.5;
+      font-size: 0.7rem;
+      color: #4a6275;
       letter-spacing: 1px;
+      height: 16px;
     }
 
-    #tip {
-      margin-top: 8px;
-      font-size: 0.78rem;
-      opacity: 0.45;
-      text-align: center;
-      max-width: 480px;
+    /* ── Hand tracking badge ── */
+    #hand-badge {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(78,222,128,0.4);
+      color: #4ade80;
+      font-size: 0.65rem;
+      padding: 4px 9px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+      z-index: 20;
     }
+    #hand-badge.visible { opacity: 1; }
   </style>
 </head>
 <body>
 
-  <h1>🌫️ Foggy Webcam</h1>
+<div class="topbar">
+  <div class="dot"></div>
+  <h1>Foggy Mirror</h1>
+</div>
 
-  <div id="canvas-wrapper">
-    <canvas id="camCanvas"></canvas>
-    <canvas id="fogCanvas"></canvas>
+<div id="wrap">
+  <canvas id="camCanvas" width="640" height="480"></canvas>
+  <canvas id="fogCanvas" width="640" height="480"></canvas>
+  <canvas id="handCanvas" width="640" height="480"></canvas>
+  <div id="cursor"></div>
+  <div id="hand-badge">✋ HAND DETECTED</div>
+</div>
+
+<div id="controls">
+  <div class="ctrl-group">
+    <label>Brush</label>
+    <input type="range" id="brushSize" min="8" max="100" value="36"/>
   </div>
-
-  <video id="video" autoplay playsinline></video>
-
-  <div id="controls">
-    <div>
-      <label>Brush Size</label>
-      <input type="range" id="brushSize" min="10" max="120" value="40" />
-    </div>
-    <div>
-      <label>Fog Density</label>
-      <input type="range" id="fogDensity" min="0.3" max="1" step="0.05" value="0.82" />
-    </div>
-    <div>
-      <label>Re-fog Speed</label>
-      <input type="range" id="refogSpeed" min="0" max="5" step="0.1" value="0.8" />
-    </div>
-    <button id="clearBtn">🌫 Re-fog All</button>
-    <button id="snapBtn">📸 Snapshot</button>
+  <div class="ctrl-group">
+    <label>Re-fog</label>
+    <input type="range" id="refogSpeed" min="0" max="6" step="0.1" value="1"/>
   </div>
+  <button class="btn" id="handToggle">🖐 Hand OFF</button>
+  <button class="btn" id="clearBtn">🌫 Re-fog All</button>
+  <button class="btn" id="snapBtn">📸 Snapshot</button>
+</div>
 
-  <p id="status">Waiting for camera…</p>
-  <p id="tip">Draw on the fog to reveal what's behind — like writing on a foggy mirror! 🖐️</p>
+<div id="status">Initialising camera…</div>
+
+<!-- Hidden video -->
+<video id="video" autoplay playsinline style="display:none"></video>
 
 <script>
-  const video       = document.getElementById('video');
-  const camCanvas   = document.getElementById('camCanvas');
-  const fogCanvas   = document.getElementById('fogCanvas');
-  const camCtx      = camCanvas.getContext('2d');
-  const fogCtx      = fogCanvas.getContext('2d');
-  const status      = document.getElementById('status');
-  const brushInput  = document.getElementById('brushSize');
-  const densityInput= document.getElementById('fogDensity');
-  const refogInput  = document.getElementById('refogSpeed');
-  const clearBtn    = document.getElementById('clearBtn');
-  const snapBtn     = document.getElementById('snapBtn');
+// ════════════════════════════════════════════════════════
+//  CONFIG
+// ════════════════════════════════════════════════════════
+const W = 640, H = 480;
 
-  const W = 640, H = 480;
-  camCanvas.width  = fogCanvas.width  = W;
-  camCanvas.height = fogCanvas.height = H;
+// ════════════════════════════════════════════════════════
+//  ELEMENTS
+// ════════════════════════════════════════════════════════
+const video      = document.getElementById('video');
+const camCanvas  = document.getElementById('camCanvas');
+const fogCanvas  = document.getElementById('fogCanvas');
+const handCanvas = document.getElementById('handCanvas');
+const camCtx     = camCanvas.getContext('2d');
+const fogCtx     = fogCanvas.getContext('2d');
+const handCtx    = handCanvas.getContext('2d');
+const cursorEl   = document.getElementById('cursor');
+const badge      = document.getElementById('hand-badge');
+const statusEl   = document.getElementById('status');
+const brushInput = document.getElementById('brushSize');
+const refogInput = document.getElementById('refogSpeed');
+const handToggle = document.getElementById('handToggle');
+const clearBtn   = document.getElementById('clearBtn');
+const snapBtn    = document.getElementById('snapBtn');
+const wrap       = document.getElementById('wrap');
 
-  // ─── Fog layer: an array of alpha values per pixel ───────────────────────
-  // 1.0 = fully fogged, 0.0 = fully clear
-  const fogAlpha = new Float32Array(W * H).fill(1.0);
+// ════════════════════════════════════════════════════════
+//  FOG STATE
+//  fogAlpha[i]: 1.0 = fully fogged | 0.0 = fully clear
+// ════════════════════════════════════════════════════════
+const fogAlpha   = new Float32Array(W * H).fill(1.0);
+const smearAlpha = new Float32Array(W * H).fill(0.0); // smear residue layer
 
-  let drawing   = false;
-  let refogTimer = null;
+// Water droplets
+const drops = [];
+function spawnDrop() {
+  drops.push({
+    x: Math.random() * (W - 40) + 20,
+    y: Math.random() * H * 0.3,
+    r: 2 + Math.random() * 5,
+    vy: 0.3 + Math.random() * 0.6,
+    life: 1.0,
+    trail: []
+  });
+}
+// Seed initial drops
+for (let i = 0; i < 18; i++) spawnDrop();
 
-  // ─── Start Webcam ─────────────────────────────────────────────────────────
-  navigator.mediaDevices.getUserMedia({ video: { width: W, height: H }, audio: false })
-    .then(stream => {
-      video.srcObject = stream;
-      video.play();
-      status.textContent = '✅ Camera active — draw on the fog!';
-      requestAnimationFrame(renderLoop);
-    })
-    .catch(err => {
-      status.textContent = '❌ Camera error: ' + err.message;
-    });
+// ════════════════════════════════════════════════════════
+//  NOISE helper (value noise, fast)
+// ════════════════════════════════════════════════════════
+const noiseGrid = new Float32Array(128 * 128);
+for (let i = 0; i < noiseGrid.length; i++) noiseGrid[i] = Math.random();
+function noise(x, y, t) {
+  const nx = ((x / W) * 64 + t * 0.3) | 0;
+  const ny = ((y / H) * 64) | 0;
+  const idx = ((nx & 127) + (ny & 127) * 128);
+  return noiseGrid[idx];
+}
 
-  // ─── Main render loop ─────────────────────────────────────────────────────
-  function renderLoop() {
-    // 1. Draw live webcam frame
-    camCtx.drawImage(video, 0, 0, W, H);
+// ════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════
+let t = 0;
+let handActive = false;
+let lastFingerX = -1, lastFingerY = -1;
 
-    // 2. Composite fog: use ImageData for per-pixel alpha control
-    const imgData = fogCtx.createImageData(W, H);
-    const data    = imgData.data;
+function renderLoop() {
+  t += 0.008;
 
-    // A soft ice-blue/grey fog colour
-    const fogR = 210, fogG = 225, fogB = 240;
+  // 1 ── Webcam (mirrored like a real mirror)
+  camCtx.save();
+  camCtx.translate(W, 0);
+  camCtx.scale(-1, 1);
+  camCtx.drawImage(video, 0, 0, W, H);
+  camCtx.restore();
 
-    for (let i = 0; i < fogAlpha.length; i++) {
-      const a = fogAlpha[i];
-      const idx = i * 4;
-      data[idx]     = fogR;
-      data[idx + 1] = fogG;
-      data[idx + 2] = fogB;
-      data[idx + 3] = Math.round(a * 255);
+  // 2 ── Build fog image
+  const img  = fogCtx.createImageData(W, H);
+  const d    = img.data;
+
+  for (let py = 0; py < H; py++) {
+    for (let px = 0; px < W; px++) {
+      const i   = py * W + px;
+      let   a   = fogAlpha[i];
+      if (a <= 0) { d[i*4+3] = 0; continue; }
+
+      // Base fog colour — slight warm breath tint
+      const n  = noise(px, py, t);
+      const r  = 218 + (n * 14) | 0;
+      const g  = 228 + (n * 10) | 0;
+      const bv = 238 + (n *  6) | 0;
+
+      // Vignette — fog thicker at edges
+      const vx = (px / W - 0.5) * 2;
+      const vy = (py / H - 0.5) * 2;
+      const vign = Math.min(1, 0.7 + 0.3 * (vx*vx + vy*vy) * 1.5);
+      a = Math.min(1, a * vign);
+
+      // Smear residue (semi-transparent trail)
+      const sm = smearAlpha[i];
+      if (sm > 0) a = Math.max(a * 0.0, sm * 0.55);
+
+      d[i*4]   = r;
+      d[i*4+1] = g;
+      d[i*4+2] = bv;
+      d[i*4+3] = Math.round(a * 255);
     }
+  }
+  fogCtx.putImageData(img, 0, 0);
 
-    fogCtx.putImageData(imgData, 0, 0);
+  // 3 ── Glass sheen (subtle diagonal highlight)
+  const sheen = fogCtx.createLinearGradient(0, 0, W * 0.6, H * 0.6);
+  sheen.addColorStop(0,   'rgba(255,255,255,0.04)');
+  sheen.addColorStop(0.5, 'rgba(255,255,255,0.01)');
+  sheen.addColorStop(1,   'rgba(255,255,255,0.00)');
+  fogCtx.fillStyle = sheen;
+  fogCtx.fillRect(0, 0, W, H);
 
-    // 3. Add subtle condensation texture on top (very cheap noise pass)
-    fogCtx.save();
-    fogCtx.globalCompositeOperation = 'overlay';
-    fogCtx.globalAlpha = 0.06;
-    for (let d = 0; d < 4; d++) {
-      const x = Math.random() * W;
-      const y = Math.random() * H;
-      const r = 20 + Math.random() * 80;
-      const g = fogCtx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, 'rgba(255,255,255,0.6)');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      fogCtx.fillStyle = g;
+  // 4 ── Water droplets
+  updateDrops();
+
+  // 5 ── Hand skeleton overlay
+  handCtx.clearRect(0, 0, W, H);
+  if (handActive && lastFingerX > 0) {
+    drawFingerGlow(lastFingerX, lastFingerY);
+  }
+
+  requestAnimationFrame(renderLoop);
+}
+
+// ════════════════════════════════════════════════════════
+//  WATER DROPS
+// ════════════════════════════════════════════════════════
+function updateDrops() {
+  // Randomly spawn new drop
+  if (Math.random() < 0.012) spawnDrop();
+
+  for (let i = drops.length - 1; i >= 0; i--) {
+    const dr = drops[i];
+    dr.trail.push({ x: dr.x, y: dr.y });
+    if (dr.trail.length > 18) dr.trail.shift();
+
+    dr.y += dr.vy;
+    dr.vy += 0.012; // gravity
+    dr.x += (Math.random() - 0.5) * 0.4; // slight wobble
+
+    // Only draw if there's fog here
+    const fi = (dr.y | 0) * W + (dr.x | 0);
+    if (fogAlpha[fi] > 0.15) {
+      // Draw trail
+      if (dr.trail.length > 2) {
+        fogCtx.beginPath();
+        fogCtx.strokeStyle = 'rgba(180,210,240,0.35)';
+        fogCtx.lineWidth = dr.r * 0.7;
+        fogCtx.lineCap = 'round';
+        fogCtx.moveTo(dr.trail[0].x, dr.trail[0].y);
+        for (let j = 1; j < dr.trail.length; j++) {
+          fogCtx.lineTo(dr.trail[j].x, dr.trail[j].y);
+        }
+        fogCtx.stroke();
+      }
+
+      // Draw bead
+      const grd = fogCtx.createRadialGradient(dr.x - dr.r*0.3, dr.y - dr.r*0.3, 0, dr.x, dr.y, dr.r);
+      grd.addColorStop(0, 'rgba(255,255,255,0.9)');
+      grd.addColorStop(0.4, 'rgba(200,225,245,0.65)');
+      grd.addColorStop(1, 'rgba(150,185,220,0.2)');
       fogCtx.beginPath();
-      fogCtx.arc(x, y, r, 0, Math.PI * 2);
+      fogCtx.arc(dr.x, dr.y, dr.r, 0, Math.PI * 2);
+      fogCtx.fillStyle = grd;
       fogCtx.fill();
     }
-    fogCtx.restore();
 
+    // Remove if off-screen or in cleared area
+    if (dr.y > H + 10 || (fogAlpha[fi] < 0.1 && dr.y > 40)) {
+      drops.splice(i, 1);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════
+//  FINGER GLOW OVERLAY
+// ════════════════════════════════════════════════════════
+function drawFingerGlow(x, y) {
+  handCtx.save();
+  const g = handCtx.createRadialGradient(x, y, 0, x, y, 28);
+  g.addColorStop(0,   'rgba(180,220,255,0.30)');
+  g.addColorStop(0.5, 'rgba(140,190,255,0.08)');
+  g.addColorStop(1,   'rgba(100,160,255,0.00)');
+  handCtx.fillStyle = g;
+  handCtx.beginPath();
+  handCtx.arc(x, y, 28, 0, Math.PI * 2);
+  handCtx.fill();
+
+  // Ring
+  handCtx.strokeStyle = 'rgba(200,235,255,0.55)';
+  handCtx.lineWidth = 1.5;
+  handCtx.beginPath();
+  handCtx.arc(x, y, 14, 0, Math.PI * 2);
+  handCtx.stroke();
+  handCtx.restore();
+}
+
+// ════════════════════════════════════════════════════════
+//  FOG WIPE  — realistic smear, not a clean erase
+// ════════════════════════════════════════════════════════
+function wipeFog(x, y, radius) {
+  const r2  = radius * radius;
+  const cx  = Math.round(x), cy = Math.round(y);
+  const x0  = Math.max(0, cx - radius);
+  const x1  = Math.min(W - 1, cx + radius);
+  const y0  = Math.max(0, cy - radius);
+  const y1  = Math.min(H - 1, cy + radius);
+
+  for (let py = y0; py <= y1; py++) {
+    for (let px = x0; px <= x1; px++) {
+      const dx = px - cx, dy = py - cy;
+      const d2 = dx*dx + dy*dy;
+      if (d2 > r2) continue;
+      const t  = 1 - d2 / r2;
+      const sm = t * t * t;          // cubic falloff
+      const i  = py * W + px;
+      const prev = fogAlpha[i];
+      fogAlpha[i]   = Math.max(0, prev - sm * 0.92);
+      smearAlpha[i] = Math.max(smearAlpha[i], sm * prev * 0.45); // leave smear
+    }
+  }
+  scheduleRefog();
+}
+
+// ════════════════════════════════════════════════════════
+//  RE-FOG
+// ════════════════════════════════════════════════════════
+let refogTimer = null;
+function scheduleRefog() {
+  if (refogTimer) return;
+  refogTimer = setInterval(() => {
+    const speed = parseFloat(refogInput.value);
+    if (speed === 0) return;
+    const inc = speed * 0.0025;
+    let any = false;
+    for (let i = 0; i < fogAlpha.length; i++) {
+      if (fogAlpha[i] < 1.0) {
+        fogAlpha[i]   = Math.min(1.0, fogAlpha[i]   + inc);
+        smearAlpha[i] = Math.max(0.0, smearAlpha[i] - inc * 0.4);
+        any = true;
+      }
+    }
+    if (!any) { clearInterval(refogTimer); refogTimer = null; }
+  }, 30);
+}
+
+// ════════════════════════════════════════════════════════
+//  MOUSE / TOUCH
+// ════════════════════════════════════════════════════════
+let mouseDown = false;
+
+function getCanvasPos(e) {
+  const rect   = fogCanvas.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
+  const src    = e.touches ? e.touches[0] : e;
+  return {
+    x: (src.clientX - rect.left) * scaleX,
+    y: (src.clientY - rect.top)  * scaleY
+  };
+}
+
+fogCanvas.addEventListener('mousemove', e => {
+  const { x, y } = getCanvasPos(e);
+  const r = parseInt(brushInput.value);
+  cursorEl.style.display = 'block';
+  cursorEl.style.left = `${(x / W * 100)}%`;
+  cursorEl.style.top  = `${(y / H * 100)}%`;
+  cursorEl.style.width  = `${r * 2 * (fogCanvas.getBoundingClientRect().width / W)}px`;
+  cursorEl.style.height = `${r * 2 * (fogCanvas.getBoundingClientRect().height / H)}px`;
+  if (mouseDown) wipeFog(x, y, r);
+});
+fogCanvas.addEventListener('mousedown',  e => { mouseDown = true;  wipeFog(...Object.values(getCanvasPos(e)), parseInt(brushInput.value)); });
+fogCanvas.addEventListener('mouseup',    () => mouseDown = false);
+fogCanvas.addEventListener('mouseleave', () => { mouseDown = false; cursorEl.style.display = 'none'; });
+fogCanvas.addEventListener('touchstart', e => { e.preventDefault(); const p = getCanvasPos(e); wipeFog(p.x, p.y, parseInt(brushInput.value)); }, { passive: false });
+fogCanvas.addEventListener('touchmove',  e => { e.preventDefault(); const p = getCanvasPos(e); wipeFog(p.x, p.y, parseInt(brushInput.value)); }, { passive: false });
+
+// ════════════════════════════════════════════════════════
+//  MEDIAPIPE HANDS
+// ════════════════════════════════════════════════════════
+let mpEnabled = false;
+let mpCamera  = null;
+let mpHands   = null;
+let prevFinger = null;
+
+function initMediaPipe() {
+  mpHands = new Hands({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${f}`
+  });
+  mpHands.setOptions({
+    maxNumHands: 1,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.75,
+    minTrackingConfidence: 0.6
+  });
+
+  mpHands.onResults(results => {
+    handCtx.clearRect(0, 0, W, H);
+    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+      badge.classList.remove('visible');
+      lastFingerX = -1; lastFingerY = -1;
+      prevFinger  = null;
+      return;
+    }
+    badge.classList.add('visible');
+
+    const lm       = results.multiHandLandmarks[0];
+    // Mirror x (video is already mirrored in camCtx)
+    const INDEX_TIP = 8;
+    const fx = (1 - lm[INDEX_TIP].x) * W;
+    const fy = lm[INDEX_TIP].y * H;
+
+    lastFingerX = fx;
+    lastFingerY = fy;
+
+    drawFingerGlow(fx, fy);
+    drawSkeleton(lm);
+
+    // Wipe fog with index finger tip (always when hand visible)
+    const r = parseInt(brushInput.value);
+    wipeFog(fx, fy, r);
+
+    // If finger moved fast, fill in between
+    if (prevFinger) {
+      const steps = Math.max(1, Math.hypot(fx - prevFinger.x, fy - prevFinger.y) / (r * 0.5)) | 0;
+      for (let s = 1; s < steps; s++) {
+        const ix = prevFinger.x + (fx - prevFinger.x) * s / steps;
+        const iy = prevFinger.y + (fy - prevFinger.y) * s / steps;
+        wipeFog(ix, iy, r);
+      }
+    }
+    prevFinger = { x: fx, y: fy };
+  });
+
+  mpCamera = new Camera(video, {
+    onFrame: async () => { await mpHands.send({ image: video }); },
+    width: W, height: H
+  });
+}
+
+// Draw hand skeleton
+const CONNECTIONS = [
+  [0,1],[1,2],[2,3],[3,4],
+  [0,5],[5,6],[6,7],[7,8],
+  [5,9],[9,10],[10,11],[11,12],
+  [9,13],[13,14],[14,15],[15,16],
+  [13,17],[0,17],[17,18],[18,19],[19,20]
+];
+function drawSkeleton(lm) {
+  handCtx.save();
+  handCtx.strokeStyle = 'rgba(120,200,255,0.45)';
+  handCtx.lineWidth   = 1.5;
+  handCtx.lineCap     = 'round';
+  for (const [a, b] of CONNECTIONS) {
+    handCtx.beginPath();
+    handCtx.moveTo((1 - lm[a].x) * W, lm[a].y * H);
+    handCtx.lineTo((1 - lm[b].x) * W, lm[b].y * H);
+    handCtx.stroke();
+  }
+  // Joints
+  for (let i = 0; i < lm.length; i++) {
+    const x = (1 - lm[i].x) * W;
+    const y = lm[i].y * H;
+    const r = i === 8 ? 5 : 2.5;
+    handCtx.beginPath();
+    handCtx.arc(x, y, r, 0, Math.PI * 2);
+    handCtx.fillStyle = i === 8 ? 'rgba(180,230,255,0.95)' : 'rgba(100,180,255,0.7)';
+    handCtx.fill();
+  }
+  handCtx.restore();
+}
+
+// ════════════════════════════════════════════════════════
+//  HAND TOGGLE BUTTON
+// ════════════════════════════════════════════════════════
+handToggle.addEventListener('click', async () => {
+  mpEnabled = !mpEnabled;
+  if (mpEnabled) {
+    handToggle.textContent = '🖐 Hand ON';
+    handToggle.classList.add('active');
+    statusEl.textContent  = '⏳ Loading hand model…';
+    if (!mpHands) initMediaPipe();
+    mpCamera.start();
+    statusEl.textContent = '✅ Hand tracking active — point index finger at screen!';
+  } else {
+    handToggle.textContent = '🖐 Hand OFF';
+    handToggle.classList.remove('active');
+    if (mpCamera) mpCamera.stop();
+    badge.classList.remove('visible');
+    handCtx.clearRect(0, 0, W, H);
+    lastFingerX = -1; lastFingerY = -1;
+    statusEl.textContent = '✋ Hand tracking off';
+  }
+});
+
+// ════════════════════════════════════════════════════════
+//  RE-FOG ALL
+// ════════════════════════════════════════════════════════
+clearBtn.addEventListener('click', () => {
+  fogAlpha.fill(1.0);
+  smearAlpha.fill(0.0);
+  if (refogTimer) { clearInterval(refogTimer); refogTimer = null; }
+});
+
+// ════════════════════════════════════════════════════════
+//  SNAPSHOT
+// ════════════════════════════════════════════════════════
+snapBtn.addEventListener('click', () => {
+  const m   = document.createElement('canvas');
+  m.width   = W; m.height = H;
+  const mCtx = m.getContext('2d');
+  mCtx.drawImage(camCanvas,  0, 0);
+  mCtx.drawImage(fogCanvas,  0, 0);
+  mCtx.drawImage(handCanvas, 0, 0);
+  const a   = document.createElement('a');
+  a.download = `foggy-${Date.now()}.png`;
+  a.href     = m.toDataURL('image/png');
+  a.click();
+});
+
+// ════════════════════════════════════════════════════════
+//  START WEBCAM
+// ════════════════════════════════════════════════════════
+navigator.mediaDevices.getUserMedia({ video: { width: W, height: H, facingMode: 'user' }, audio: false })
+  .then(stream => {
+    video.srcObject = stream;
+    video.play();
+    statusEl.textContent = '✅ Camera ready — draw with mouse or enable hand tracking!';
     requestAnimationFrame(renderLoop);
-  }
-
-  // ─── Re-fog over time ─────────────────────────────────────────────────────
-  function scheduleRefog() {
-    if (refogTimer) return;
-    refogTimer = setInterval(() => {
-      const speed = parseFloat(refogInput.value);
-      if (speed === 0) return;
-      const increment = speed * 0.003;
-      let anyCleared = false;
-      for (let i = 0; i < fogAlpha.length; i++) {
-        if (fogAlpha[i] < 1.0) {
-          fogAlpha[i] = Math.min(1.0, fogAlpha[i] + increment);
-          anyCleared = true;
-        }
-      }
-      if (!anyCleared) {
-        clearInterval(refogTimer);
-        refogTimer = null;
-      }
-    }, 30);
-  }
-
-  // ─── Brush: clear fog ─────────────────────────────────────────────────────
-  function clearFog(x, y) {
-    const radius = parseInt(brushInput.value);
-    const r2     = radius * radius;
-    const cx = Math.round(x), cy = Math.round(y);
-
-    const x0 = Math.max(0, cx - radius);
-    const x1 = Math.min(W - 1, cx + radius);
-    const y0 = Math.max(0, cy - radius);
-    const y1 = Math.min(H - 1, cy + radius);
-
-    for (let py = y0; py <= y1; py++) {
-      for (let px = x0; px <= x1; px++) {
-        const dx = px - cx, dy = py - cy;
-        const dist2 = dx * dx + dy * dy;
-        if (dist2 > r2) continue;
-        // Soft falloff at edges
-        const t = 1 - dist2 / r2;
-        const smooth = t * t;
-        const i = py * W + px;
-        fogAlpha[i] = Math.max(0, fogAlpha[i] - smooth * 0.95);
-      }
-    }
-
-    scheduleRefog();
-  }
-
-  function getPos(e) {
-    const rect = fogCanvas.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const scaleY = H / rect.height;
-    if (e.touches) {
-      return {
-        x: (e.touches[0].clientX - rect.left) * scaleX,
-        y: (e.touches[0].clientY - rect.top)  * scaleY
-      };
-    }
-    return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top)  * scaleY
-    };
-  }
-
-  fogCanvas.addEventListener('mousedown',  e => { drawing = true;  clearFog(...Object.values(getPos(e))); });
-  fogCanvas.addEventListener('mousemove',  e => { if (drawing) clearFog(...Object.values(getPos(e))); });
-  fogCanvas.addEventListener('mouseup',    () => drawing = false);
-  fogCanvas.addEventListener('mouseleave', () => drawing = false);
-
-  fogCanvas.addEventListener('touchstart',  e => { e.preventDefault(); drawing = true;  clearFog(...Object.values(getPos(e))); }, { passive: false });
-  fogCanvas.addEventListener('touchmove',   e => { e.preventDefault(); if (drawing) clearFog(...Object.values(getPos(e))); }, { passive: false });
-  fogCanvas.addEventListener('touchend',    () => drawing = false);
-
-  // ─── Re-fog All button ────────────────────────────────────────────────────
-  clearBtn.addEventListener('click', () => {
-    fogAlpha.fill(1.0);
-    if (refogTimer) { clearInterval(refogTimer); refogTimer = null; }
+  })
+  .catch(err => {
+    statusEl.textContent = '❌ Camera error: ' + err.message;
   });
-
-  // ─── Snapshot button ──────────────────────────────────────────────────────
-  snapBtn.addEventListener('click', () => {
-    // Merge both canvases into one for download
-    const merge = document.createElement('canvas');
-    merge.width  = W;
-    merge.height = H;
-    const mCtx = merge.getContext('2d');
-    mCtx.drawImage(camCanvas, 0, 0);
-    mCtx.drawImage(fogCanvas, 0, 0);
-
-    const link = document.createElement('a');
-    link.download = 'foggy-snap.png';
-    link.href = merge.toDataURL('image/png');
-    link.click();
-  });
-
-  // ─── Live fog density slider ──────────────────────────────────────────────
-  // (changes how visible the existing fog is by scaling the alpha array visually)
-  // We already read fogDensity inside the render loop via the slider value,
-  // so we just need the slider to exist — no extra JS needed here.
 </script>
 </body>
 </html>
